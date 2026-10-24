@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DuckPlan is a student planner that brings classes, assignments, tasks, and calendars together."
+    />
+    <title>DuckPlan | Student planning, all in one place</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17221b;
+        --muted: #536157;
+        --cream: #fffaf0;
+        --yellow: #ffd45a;
+        --orange: #e98731;
+        --green: #244d38;
+        --green-light: #d9eadf;
+        --card: rgba(255, 255, 255, 0.82);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 12% 15%, rgba(255, 212, 90, 0.38), transparent 30%),
+          radial-gradient(circle at 88% 80%, rgba(36, 77, 56, 0.18), transparent 33%),
+          var(--cream);
+      }
+
+      main {
+        width: min(1080px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .duck {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        background: var(--yellow);
+        box-shadow: 3px 3px 0 var(--ink);
+        font-size: 1.35rem;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 13px;
+        border: 1px solid rgba(23, 34, 27, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.6);
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 650;
+      }
+
+      .status::before {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--orange);
+        content: "";
+        box-shadow: 0 0 0 4px rgba(233, 135, 49, 0.14);
+      }
+
+      .hero {
+        display: grid;
+        min-height: calc(100vh - 150px);
+        align-items: center;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: clamp(38px, 7vw, 96px);
+        padding: 80px 0 56px;
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--green);
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(3.4rem, 8vw, 7.2rem);
+        line-height: 0.9;
+        letter-spacing: -0.07em;
+      }
+
+      h1 span {
+        position: relative;
+        color: var(--green);
+        white-space: nowrap;
+      }
+
+      h1 span::after {
+        position: absolute;
+        right: 0;
+        bottom: 0.02em;
+        left: 0;
+        z-index: -1;
+        height: 0.18em;
+        border-radius: 999px;
+        background: var(--yellow);
+        content: "";
+        transform: rotate(-1.5deg);
+      }
+
+      .lede {
+        max-width: 620px;
+        margin: 28px 0 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 2vw, 1.28rem);
+        line-height: 1.65;
+      }
+
+      .team {
+        margin: 24px 0 0;
+        color: var(--green);
+        font-size: 0.93rem;
+        font-weight: 720;
+      }
+
+      .preview {
+        position: relative;
+        padding: 22px;
+        border: 2px solid var(--ink);
+        border-radius: 30px;
+        background: var(--card);
+        box-shadow: 10px 10px 0 var(--ink);
+        transform: rotate(2deg);
+        backdrop-filter: blur(12px);
+      }
+
+      .preview::before {
+        position: absolute;
+        top: -32px;
+        right: 28px;
+        content: "🦆";
+        font-size: 3.8rem;
+        transform: rotate(-9deg);
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .preview-header strong {
+        font-size: 1.05rem;
+      }
+
+      .date {
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 650;
+      }
+
+      .task {
+        display: grid;
+        align-items: center;
+        grid-template-columns: 12px 1fr auto;
+        gap: 12px;
+        padding: 15px 0;
+        border-top: 1px solid rgba(23, 34, 27, 0.12);
+      }
+
+      .task-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--yellow);
+        box-shadow: inset 0 0 0 2px rgba(23, 34, 27, 0.18);
+      }
+
+      .task:nth-child(3) .task-dot {
+        background: #83b6e2;
+      }
+
+      .task:nth-child(4) .task-dot {
+        background: #ec9aa7;
+      }
+
+      .task-name {
+        font-size: 0.91rem;
+        font-weight: 720;
+      }
+
+      .task-class {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      .task time {
+        color: var(--green);
+        font-size: 0.76rem;
+        font-weight: 760;
+      }
+
+      .coming-soon {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: var(--green-light);
+        color: var(--green);
+        font-size: 0.84rem;
+        font-weight: 760;
+        text-align: center;
+      }
+
+      footer {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: center;
+      }
+
+      @media (max-width: 780px) {
+        .hero {
+          grid-template-columns: 1fr;
+          padding-top: 64px;
+        }
+
+        .preview {
+          width: min(100%, 520px);
+          margin: 0 auto;
+          transform: rotate(0);
+        }
+      }
+
+      @media (max-width: 480px) {
+        main {
+          width: min(100% - 26px, 1080px);
+        }
+
+        .status {
+          padding: 8px 10px;
+          font-size: 0.74rem;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 54px;
+        }
+
+        h1 {
+          font-size: clamp(3.1rem, 17vw, 4.8rem);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Primary navigation">
+        <div class="brand"><span class="duck" aria-hidden="true">🦆</span> DuckPlan</div>
+        <div class="status">In development</div>
+      </nav>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">A smarter student planner</p>
+          <h1>Plan less.<br /><span>Do more.</span></h1>
+          <p class="lede">
+            DuckPlan brings classes, assignments, personal tasks, and your calendar into one
+            organized place—so you always know what is next.
+          </p>
+          <p class="team">Built by Michael, Bobby, and Priya.</p>
+        </div>
+
+        <div class="preview" aria-label="Preview of a DuckPlan task list">
+          <div class="preview-header">
+            <strong>Today</strong>
+            <span class="date">Your day at a glance</span>
+          </div>
+          <div class="task">
+            <span class="task-dot" aria-hidden="true"></span>
+            <div>
+              <div class="task-name">Finish reading response</div>
+              <div class="task-class">English</div>
+            </div>
+            <time>3:30 PM</time>
+          </div>
+          <div class="task">
+            <span class="task-dot" aria-hidden="true"></span>
+            <div>
+              <div class="task-name">Review practice problems</div>
+              <div class="task-class">Calculus</div>
+            </div>
+            <time>5:00 PM</time>
+          </div>
+          <div class="task">
+            <span class="task-dot" aria-hidden="true"></span>
+            <div>
+              <div class="task-name">Prepare lab notes</div>
+              <div class="task-class">Physics</div>
+            </div>
+            <time>Tomorrow</time>
+          </div>
+          <div class="coming-soon">The full planner is coming soon.</div>
+        </div>
+      </section>
+
+      <footer>DuckPlan · Student planning with a little more calm.</footer>
+    </main>
+  </body>
+</html>
