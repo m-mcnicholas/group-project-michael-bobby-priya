@@ -174,7 +174,8 @@ function furLabelForButton(button) {
   return visibleText || button.getAttribute("aria-label") || "Button";
 }
 
-function isTextOnlyButton(button) {
+function shouldUseFurButton(button) {
+  if (button.matches("[data-fur-button]")) return true;
   if (button.matches(".nav-item, .icon-button, .profile-card, .class-menu, .close-button, #sync-info")) return false;
   if (button.querySelector("[aria-hidden='true'], .notification-dot, .nav-icon, .nav-count, .avatar, small")) return false;
   const text = button.textContent.replace(/\s+/g, " ").trim();
@@ -186,7 +187,7 @@ function setupFurMaterial(root = document) {
   if (!window.DuckFur) return;
   const modalIsOpen = els.modal.open;
   root.querySelectorAll("button").forEach((button) => {
-    const shouldMount = isTextOnlyButton(button)
+    const shouldMount = shouldUseFurButton(button)
       && button.getClientRects().length
       && (!modalIsOpen || els.modal.contains(button));
     if (!shouldMount) {
