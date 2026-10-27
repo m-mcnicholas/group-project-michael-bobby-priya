@@ -199,7 +199,7 @@ function setupFurMaterial(root = document) {
       length: 5.2,
       stiffness: 62,
       damping: 22,
-      radius: 64,
+      radius: 12.8,
       recoveryDelay: 280,
       pressDepth: 0.78,
       compression: 0.92,
