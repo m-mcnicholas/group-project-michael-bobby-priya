@@ -42,10 +42,17 @@ button { color: inherit; transition: transform 140ms ease, filter 140ms ease, bo
 button, a { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #8c5b00; outline-offset: 3px; }
 button:disabled { opacity: 0.48; cursor: not-allowed; }
-button:not(:disabled):active { transform: scale(0.96); filter: brightness(0.93); transition-duration: 70ms; }
+button:not(:disabled):active, .interaction-pressed { transform: scale(0.96); filter: brightness(0.93); transition-duration: 70ms; }
+.interaction-released:not(.fur-material) { animation: button-release 340ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes button-release {
+  0% { transform: scale(0.96); filter: brightness(0.93); }
+  48% { transform: scale(1.025); filter: brightness(1.04); }
+  100% { transform: none; filter: none; }
+}
 .fur-material { position: relative; isolation: isolate; overflow: hidden; }
 .fur-material:not(:disabled):hover,
-.fur-material:not(:disabled):active {
+.fur-material:not(:disabled):active,
+.fur-material:not(:disabled).interaction-pressed {
   transform: none !important;
   translate: none;
   scale: none;
@@ -344,6 +351,7 @@ a.secondary-button { color: var(--ink-deep); text-decoration: none; }
   .filter-chip:not(.active):not(:disabled):hover { border-color: rgba(43,33,13,0.28); color: var(--ink-deep); transform: translateY(-1px); }
   .class-menu:not(:disabled):hover { color: var(--ink-deep); background: var(--yellow-soft); transform: rotate(8deg); }
 }
+.interaction-pressed:not(.fur-material) { transform: scale(0.96); filter: brightness(0.9); }
 @media (prefers-reduced-transparency: reduce) {
   .sidebar { background: linear-gradient(155deg, #ffe58d, #f8c943 72%, #efb72a); }
   .topbar, .primary-nav, .search-box, .icon-button, .calendar-controls button, .close-button, .secondary-button, .filter-chip, .task-modal form { background: #fffdf7; }
@@ -357,5 +365,7 @@ a.secondary-button { color: var(--ink-deep); text-decoration: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  button:not(:disabled):active, .nav-item:not(:disabled):hover, .profile-card:not(:disabled):hover, .primary-button:not(:disabled):hover, .secondary-button:not(:disabled):hover, .dark-button:not(:disabled):hover, .icon-button:not(:disabled):hover, .calendar-controls button:not(:disabled):hover, .close-button:not(:disabled):hover, .filter-chip:not(:disabled):hover, .class-menu:not(:disabled):hover, .text-button:not(:disabled):hover > span { transform: none; }
+  button:not(:disabled):active, .interaction-pressed, .nav-item:not(:disabled):hover, .profile-card:not(:disabled):hover, .primary-button:not(:disabled):hover, .secondary-button:not(:disabled):hover, .dark-button:not(:disabled):hover, .icon-button:not(:disabled):hover, .calendar-controls button:not(:disabled):hover, .close-button:not(:disabled):hover, .filter-chip:not(:disabled):hover, .class-menu:not(:disabled):hover, .text-button:not(:disabled):hover > span { transform: none; }
+  .interaction-released:not(.fur-material) { animation: none; filter: brightness(1.06); box-shadow: 0 0 0 3px rgba(140,91,0,0.24); }
+  .fur-material.interaction-released .fur-canvas { filter: brightness(1.08); }
 }

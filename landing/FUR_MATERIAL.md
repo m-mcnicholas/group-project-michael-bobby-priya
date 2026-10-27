@@ -71,6 +71,8 @@ The canvas is decorative, `aria-hidden`, and cannot receive pointer events. Nati
 
 Fur-enabled controls do not scale, translate, or darken as a whole while hovered or pressed. Press feedback comes exclusively from localized strand deformation so the underlying surface remains physically stationary. Pointer-down immediately imprints most of the local depression, then the spring simulation completes the compression and recovery. The overscanned canvas remains decorative and `pointer-events: none`; hit testing, keyboard activation, focus indication, disabled behavior, and accessible naming remain owned by the unchanged HTML button.
 
+The project-wide three-stage interaction rule also applies to fur controls: pointer movement brushes the fibers for hover feedback, pointer or keyboard down creates a localized compression imprint, and release produces a visible delayed strand recovery. Standard buttons use a brief rebound after release. Reduced-motion mode replaces the moving release response with a short static brightness cue.
+
 ## Material lab
 
 Open `fur-lab.html` from a local server or use Settings → Interactive fur lab. It provides a large inspection surface; controlled 1×/2×/3× resolution comparisons; 78/85/90/95% boundary-suppression comparisons; root-only, narrow-fiber, and boundary-aware geometry comparisons; production labels at 40/44/48 px; all label-geometry and interaction controls; a neutral-state reset; and live renderer, rebuild, memory, targeted-allocation, cap-utilization, and strand diagnostics. Recovery delay is adjustable from 0–5,000 ms and defaults to a more plausible 280 ms. The default stiffness and damping are intentionally overdamped for a controlled, non-bouncy return.

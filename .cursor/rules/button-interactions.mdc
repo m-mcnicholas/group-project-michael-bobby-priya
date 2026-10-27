@@ -1,14 +1,18 @@
 ---
-description: Require visible hover, pressed, and keyboard-focus feedback for every button-like control.
+description: Require distinct hover, held-press, post-release, and keyboard-focus feedback for every button-like control.
 alwaysApply: true
 ---
 
-# Button Interaction Feedback
+# Three-Stage Button Interaction Feedback
 
-- Every button and button-like control must have a visually distinct hover state on devices that support hover.
-- Every button must provide immediate pressed feedback on click or tap, such as a subtle scale, tint, elevation, or shadow change.
-- Hover and pressed effects must not shift the surrounding layout or reduce text readability.
+- Every enabled button and button-like control must provide three visibly distinct interaction stages, regardless of its material or visual style:
+  1. **Hover:** visible while a hover-capable pointer is over the control.
+  2. **Press:** immediate feedback while pointer, touch, Space, or Enter is held down.
+  3. **Release:** a brief, visible response after the press is released; this must be more than simply removing the pressed style.
+- Match the effect to the material. Standard controls may lift, compress, tint, or rebound; fur controls must use localized brushing/compression and visible strand recovery rather than moving the whole control.
+- Interaction effects must not shift surrounding layout or reduce label readability.
 - Keep a clear `:focus-visible` state for keyboard users; hover must never be the only interaction cue.
-- Disabled controls must not show hover or pressed feedback and must look unavailable.
-- Respect reduced-motion preferences when an effect uses animation or movement.
-- Verify these states whenever a button is added or visually changed.
+- Disabled controls must show none of the three interaction effects and must look unavailable.
+- Keyboard activation must receive equivalent press and release feedback.
+- Under reduced motion, replace movement with an immediate tint, outline, brightness, or elevation change while preserving all three states.
+- Verify hover, held press, post-release, keyboard, disabled, and reduced-motion behavior whenever a button is added or visually changed.
