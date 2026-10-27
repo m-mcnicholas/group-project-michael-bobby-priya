@@ -74,6 +74,7 @@ function makeSurface(points, overrides = {}) {
     stiffness: 62,
     damping: 22,
     radius: 28,
+    pressRadius: null,
     brushStrength: 5.8,
     compression: 0.92,
     recoveryDelay: 280,
@@ -135,6 +136,28 @@ test("three-zone press keeps the center compressed and reserves splay for the tr
   assert.ok(transition.splay > center.splay + 0.25);
   assert.ok(outer.depression < 0.01);
   assert.ok(outer.splay < 0.01);
+});
+
+test("press radius can exceed hover radius without widening ordinary brushing", () => {
+  const surface = makeSurface([[50, 50], [70, 50], [90, 50]], { radius: 12, pressRadius: 36 });
+
+  surface.brush(45, 50, 55, 50, 16);
+  assert.equal(surface.recoveryHold[1], 0, "hover should not reach a fiber outside the normal radius");
+
+  surface.pointer = { x: 50, y: 50 };
+  surface.pressed = true;
+  surface.imprintPress();
+  assert.equal(surface.activePress[0], 1);
+  assert.equal(surface.activePress[1], 1, "click should reach a fiber inside the larger press radius");
+  assert.equal(surface.activePress[2], 0, "click should not reach beyond the press radius");
+});
+
+test("press radius falls back to the normal radius when it is not configured", () => {
+  const surface = makeSurface([[50, 50], [70, 50]], { radius: 12, pressRadius: null });
+  surface.pressed = true;
+  surface.imprintPress();
+  assert.equal(surface.activePress[0], 1);
+  assert.equal(surface.activePress[1], 0);
 });
 
 test("brushing uses independent per-fiber recovery holds", () => {

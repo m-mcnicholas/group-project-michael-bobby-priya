@@ -46,7 +46,7 @@ Production buttons use a fur-only silhouette mode. A rounded-rectangle distance 
 
 ## Integration choice
 
-Production text-only buttons use a 12.8 CSS-pixel interaction radius, exactly one fifth of the earlier 64 px setting. This keeps hover and press deformation tightly localized. The Fur Lab radius control remains independent so broader interaction profiles can still be explored without changing the approved website tuning.
+Production text-only buttons use a 12.8 CSS-pixel hover/brush interaction radius, exactly one fifth of the earlier 64 px setting. Click, keyboard activation, and pressed dragging use a separate 38.4 px press radius—three times the normal radius—so deliberate activation creates a broader physical impression without making pointer movement overly reactive. When `pressRadius` is omitted, it falls back to `radius`; this keeps the Fur Lab's existing single-radius control backward-compatible and independently tunable.
 
 The app is buildless, and this material does not need Three.js scene management, cameras, loaders, or a general-purpose object graph. Native WebGL2 keeps the production payload dependency-free. DuckPlan mounts the approved material only on visible native `<button>` controls whose content is text-only. Buttons containing icons, arrows, counts, avatars, notification dots, menu symbols, or supporting metadata retain their standard UI. Hidden views and closed dialogs unmount their fur surfaces and release their GPU resources before the next visible control set mounts. While the modal is open, its eligible text buttons own the fur renderers and the inert background releases its contexts until the dialog closes.
 
