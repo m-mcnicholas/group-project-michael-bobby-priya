@@ -46,7 +46,7 @@ Production buttons use a fur-only silhouette mode. A rounded-rectangle distance 
 
 ## Integration choice
 
-The app is buildless, and this material does not need Three.js scene management, cameras, loaders, or a general-purpose object graph. Native WebGL2 keeps the production payload dependency-free. DuckPlan creates renderers only for `.primary-button` and `.dark-button` controls, rather than every button.
+The app is buildless, and this material does not need Three.js scene management, cameras, loaders, or a general-purpose object graph. Native WebGL2 keeps the production payload dependency-free. The current local experiment mounts the approved material on every visible native `<button>`. Labels are normalized per control so navigation items use their main title, profile controls use the account name, and icon buttons retain their visible symbol instead of attempting to render hidden supporting text. Hidden views and closed dialogs unmount their surfaces and release their GPU resources before the next visible control set mounts. While the modal is open, its three active buttons own the fur renderers and the inert background releases its contexts until the dialog closes. This keeps desktop and mobile control sets below typical browser WebGL-context limits.
 
 Each selected surface currently owns a small WebGL context. This is appropriate for the three visible/available production surfaces and keeps clipping and stacking reliable. If the material expands to many simultaneous controls, replace these contexts with a shared atlas/scissor renderer.
 

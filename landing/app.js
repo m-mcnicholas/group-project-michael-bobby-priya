@@ -122,6 +122,7 @@ function renderTasks() {
 }
 
 function renderClasses() {
+  if (window.DuckFur) els.classGrid.querySelectorAll("button").forEach((button) => window.DuckFur.unmount(button));
   const entries = Object.entries(CLASS_INFO);
   els.miniClassList.innerHTML = entries.slice(0, 4).map(([name, info]) => {
     const open = tasks.filter((task) => task.className === name && !task.completed).length;
@@ -159,9 +160,29 @@ function renderCalendar() {
   }).join("");
 }
 
+function furLabelForButton(button) {
+  const navLabel = button.matches(".nav-item") ? button.querySelector("span:not(.nav-icon):not(.nav-count)")?.textContent : "";
+  if (navLabel?.trim()) return navLabel.trim();
+  const profileLabel = button.matches(".profile-card") ? button.querySelector("strong")?.textContent : "";
+  if (profileLabel?.trim()) return profileLabel.trim();
+  const iconLabel = button.matches(".icon-button") ? button.querySelector("[aria-hidden='true']")?.textContent : "";
+  if (iconLabel?.trim()) return iconLabel.trim();
+
+  const clone = button.cloneNode(true);
+  clone.querySelectorAll(".notification-dot, .nav-count, small, [aria-hidden='true']").forEach((element) => element.remove());
+  const visibleText = clone.textContent.replace(/\s+/g, " ").trim().replace(/[→←›]+$/, "").trim();
+  return visibleText || button.getAttribute("aria-label") || "Button";
+}
+
 function setupFurMaterial(root = document) {
   if (!window.DuckFur) return;
-  root.querySelectorAll(".primary-button, .dark-button").forEach((button) => {
+  const modalIsOpen = els.modal.open;
+  root.querySelectorAll("button").forEach((button) => {
+    const shouldMount = button.getClientRects().length && (!modalIsOpen || els.modal.contains(button));
+    if (!shouldMount) {
+      window.DuckFur.unmount(button);
+      return;
+    }
     window.DuckFur.mount(button, {
       quality: "medium",
       density: 1,
@@ -189,6 +210,7 @@ function setupFurMaterial(root = document) {
       boundaryLabelLeanScale: 0.62,
       fragmentGlyphMask: true,
       silhouette: true,
+      label: furLabelForButton(button),
     });
   });
 }
@@ -208,6 +230,7 @@ function setView(name) {
   els.pageEyebrow.textContent = next.dataset.eyebrow;
   history.replaceState(null, "", `#${name}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
+  setupFurMaterial();
 }
 
 function showToast(message) {
@@ -252,9 +275,13 @@ const openModal = () => {
   els.form.elements.dueDate.value = isoOffset(0);
   els.form.elements.dueTime.value = "15:30";
   els.modal.showModal();
+  setupFurMaterial();
   els.form.elements.title.focus();
 };
-const closeModal = () => els.modal.close();
+const closeModal = () => {
+  els.modal.close();
+  setupFurMaterial();
+};
 document.querySelector("#open-task-modal").addEventListener("click", openModal);
 document.querySelector("#close-task-modal").addEventListener("click", closeModal);
 document.querySelector("#cancel-task").addEventListener("click", closeModal);

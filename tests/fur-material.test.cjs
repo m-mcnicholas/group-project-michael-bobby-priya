@@ -64,6 +64,10 @@ test("approved label tuning is saved as the material default", () => {
   assert.equal(window.DuckFur.defaults.labelWidthScale, 0.9);
 });
 
+test("unmount safely ignores controls without a mounted surface", () => {
+  assert.equal(window.DuckFur.unmount({}), false);
+});
+
 function makeSurface(points, overrides = {}) {
   const surface = Object.create(DuckFurSurface.prototype);
   surface.options = {

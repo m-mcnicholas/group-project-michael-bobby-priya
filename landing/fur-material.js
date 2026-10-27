@@ -257,6 +257,7 @@
       this.host.classList.add("fur-material");
       this.host.classList.toggle("fur-button-silhouette", Boolean(this.options.silhouette));
 
+      this.destroyed = false;
       this.width = 0;
       this.height = 0;
       this.count = 0;
@@ -992,7 +993,7 @@
     }
 
     frame(time) {
-      if (!this.running) return;
+      if (this.destroyed || !this.running) return;
       if (!this.visible || document.hidden) {
         this.running = false;
         this.lastFrame = 0;
@@ -1053,7 +1054,7 @@
     }
 
     wake() {
-      if (this.running || !this.gl || !this.visible || document.hidden) return;
+      if (this.destroyed || this.running || !this.gl || !this.visible || document.hidden) return;
       this.running = true;
       this.lastFrame = 0;
       this.frames = 0;
@@ -1227,8 +1228,47 @@
     }
 
     onContextRestored() {
+      if (this.destroyed) return;
       this.initializeGraphics();
       this.resize();
+    }
+
+    destroy() {
+      if (this.destroyed) return;
+      this.destroyed = true;
+      this.running = false;
+      this.resizeObserver?.disconnect();
+      this.intersectionObserver?.disconnect();
+      this.labelObserver?.disconnect();
+      this.host.removeEventListener("pointerenter", this.onPointerEnter);
+      this.host.removeEventListener("pointermove", this.onPointerMove);
+      this.host.removeEventListener("pointerdown", this.onPointerDown);
+      this.host.removeEventListener("pointerup", this.onPointerUp);
+      this.host.removeEventListener("pointercancel", this.onPointerCancel);
+      this.host.removeEventListener("lostpointercapture", this.onLostPointerCapture);
+      this.host.removeEventListener("pointerleave", this.onPointerLeave);
+      this.host.removeEventListener("keydown", this.onKeyDown);
+      this.host.removeEventListener("keyup", this.onKeyUp);
+      document.removeEventListener("visibilitychange", this.onVisibility);
+      window.removeEventListener("blur", this.onWindowBlur);
+      this.canvas.removeEventListener("webglcontextlost", this.onContextLost);
+      this.canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
+      if (this.reducedMotion.removeEventListener) this.reducedMotion.removeEventListener("change", this.onMotionChange);
+
+      const gl = this.gl;
+      if (gl) {
+        if (this.glyphTexture) gl.deleteTexture(this.glyphTexture);
+        if (this.cornerBuffer) gl.deleteBuffer(this.cornerBuffer);
+        if (this.rootBuffer) gl.deleteBuffer(this.rootBuffer);
+        if (this.stateBuffer) gl.deleteBuffer(this.stateBuffer);
+        if (this.materialBuffer) gl.deleteBuffer(this.materialBuffer);
+        if (this.vertexArray) gl.deleteVertexArray(this.vertexArray);
+        if (this.program) gl.deleteProgram(this.program);
+        gl.getExtension("WEBGL_lose_context")?.loseContext();
+      }
+      this.gl = null;
+      this.canvas.remove();
+      this.host.classList.remove("fur-material", "fur-button-silhouette", "fur-static-fallback", "fur-hovered", "fur-pressed");
     }
   }
 
@@ -1248,9 +1288,18 @@
     return [...root.querySelectorAll(selector)].map((host) => mount(host));
   }
 
+  function unmount(host) {
+    const surface = registry.get(host);
+    if (!surface) return false;
+    surface.destroy();
+    registry.delete(host);
+    return true;
+  }
+
   window.DuckFur = {
     mount,
     mountAll,
+    unmount,
     defaults: { ...DEFAULTS },
     __testing: { DuckFurSurface, pressProfile, encodeSignedDistance, stableRandom, motionGuardProtection, overscanLayout, silhouetteRootIncluded, REST_TOLERANCE, ROOT_STRIDE, STATE_STRIDE, MATERIAL_STRIDE },
   };
