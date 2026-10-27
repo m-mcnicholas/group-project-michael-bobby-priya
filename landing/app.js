@@ -174,11 +174,21 @@ function furLabelForButton(button) {
   return visibleText || button.getAttribute("aria-label") || "Button";
 }
 
+function isTextOnlyButton(button) {
+  if (button.matches(".nav-item, .icon-button, .profile-card, .class-menu, .close-button, #sync-info")) return false;
+  if (button.querySelector("[aria-hidden='true'], .notification-dot, .nav-icon, .nav-count, .avatar, small")) return false;
+  const text = button.textContent.replace(/\s+/g, " ").trim();
+  if (!text || !/[a-z0-9]/i.test(text)) return false;
+  return !/[→←›×♢⌂□✓◫⚙＋•]/u.test(text);
+}
+
 function setupFurMaterial(root = document) {
   if (!window.DuckFur) return;
   const modalIsOpen = els.modal.open;
   root.querySelectorAll("button").forEach((button) => {
-    const shouldMount = button.getClientRects().length && (!modalIsOpen || els.modal.contains(button));
+    const shouldMount = isTextOnlyButton(button)
+      && button.getClientRects().length
+      && (!modalIsOpen || els.modal.contains(button));
     if (!shouldMount) {
       window.DuckFur.unmount(button);
       return;
