@@ -2,8 +2,6 @@
 ## Procedures
 Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pull the plans.md file and check what has been done before beginning work, and ALWAYS record what you did in the plans.md file once finished, and ALWAYS push the plans.md file when work is being done. If you push, push to a non-main branch unless explicitly told. Use pull requests instead of pushing to main.
 
-i was here
-
 ### Project Rules
  - Follow `.cursor/rules/button-interactions.mdc` for every button and button-like control across the project.
  - Follow `.cursor/rules/local-first-release.mdc` for all website work: review changes locally and obtain explicit approval before any public deployment.
@@ -56,6 +54,7 @@ i was here
 ### Open Questions
  - What does Axis offer for integration — a public API, an export (iCal/CSV), or nothing? Do we need school/IT permission? This decides how Phase 2 works. 
     - We know that it offers iCal, we are not sure if it has an API
+    - Answered for iCal (2026-10-28): each student has a private Blackbaud "Podium" feed link (`https://` or `webcal://<school>.myschoolapp.com/podium/feed/iCal.aspx?z=...`). See **Backend Plan → Axis sync** for what it contains. Still unknown: whether item UIDs stay stable across downloads.
  - If there is no API: fall back to an iCal feed import or manual entry until access is figured out.
  - Supabase or Firebase?
   - Supabase
@@ -88,6 +87,67 @@ i was here
  - **Bobby**: Axis integration and sync logic
  - **Priya**: UI/UX — calendar and task list views, design, theming
  - **Everyone**: testing, code review, updating this file
+
+### Backend Plan
+**Approach:** build the Supabase backend now, behind the current static `landing/` site (load `supabase-js` from a CDN), instead of waiting for the Expo rewrite. The schema, row-level security, and server functions carry over to Expo unchanged; only the UI gets rewritten.
+
+**Repo layout**
+ - `supabase/migrations/`: SQL schema files, tracked in git
+ - `supabase/functions/axis-sync/`: Edge Function (Deno) that runs the Axis sync
+ - `supabase/seed.sql`: the current demo classes and tasks as sample data
+ - `landing/planner-store.js`: the only file that reads or writes planner data
+ - `landing/ical-parser.js`: pure parser code, tested with `node --test` like `planner-model.js`
+ - Two Supabase projects, **dev** and **prod**. Under the local-first-release rule, applying a migration to prod counts as a deployment and needs explicit approval.
+
+**Schema** (refines the draft data model above)
+ - `profiles`: `id` (= `auth.users.id`), `display_name`, `time_zone`, `settings jsonb`. The time zone lets the server work out exact reminder times.
+ - `classes`: `id uuid`, `user_id`, `name`, `teacher`, `period`, `color`, `code`, `axis_key`, `archived`. Unique on (`user_id`, `axis_key`).
+ - `items`: `id uuid`, `user_id`, `class_id` (optional), `type` (assignment / test / task / event), `title`, `notes`, `priority`, `due_date date`, `due_time time`, `scheduled_start timestamp`, `duration_minutes`, `completed`, `completed_at`, `source` (manual / axis), `axis_uid`, `axis_missing`, `updated_at`, `deleted_at`. Unique on (`user_id`, `axis_uid`), so re-syncs never create duplicates.
+ - `axis_connections`: `user_id`, `ical_url`, `last_synced_at`, `last_error`. The browser can't read this table; only the sync function can, because the feed link works like a password.
+ - `sync_runs`: `id`, `user_id`, `started_at`, `status`, `added`, `updated`, `removed`. A log for debugging.
+ - `reminders`: `id`, `item_id`, `offset_minutes`, `fire_at timestamptz`, `sent_at`. The table is created now; delivery comes in Phase 3.
+
+**Schema rules**
+ - Deadlines are plain local calendar values (`date` + `time`), matching `toDateKey` in `planner-model.js`. Don't store them as time-zone timestamps.
+ - The client generates ids with `crypto.randomUUID()`, so the UI can update instantly and offline mode stays possible later.
+ - Delete by setting `deleted_at` instead of removing rows, so deletions reach every device.
+ - Axis only overwrites the fields it owns (title, due date, class, notes). It never touches `completed`, `scheduled_start`, or `priority`.
+
+**Auth and security**
+ - Supabase Auth: Google sign-in if the school uses Google accounts, with email magic links as the fallback. A trigger creates each user's `profiles` row on sign-up.
+ - Row-level security on every table with `user_id = auth.uid()`. This is what makes the public anon key safe to ship. Add a test that confirms user A can't read user B's rows.
+
+**`planner-store.js`**
+ - Functions: `listItems(range)`, `upsertItem`, `deleteItem`, `toggleComplete`, `listClasses`, `upsertClass`, `subscribe(onChange)`.
+ - `app.js` calls these instead of using `localStorage` and `CLASS_INFO` directly. When nobody is signed in, the store falls back to `localStorage` so the demo keeps working.
+ - On first sign-in, offer to import local tasks: create `classes` rows from `CLASS_INFO`, map each task's `className` to the new `class_id`, and keep the `migrateTasks` rule of never inventing a schedule from an old due time.
+ - Supabase Realtime on `items` and `classes` keeps devices in sync.
+
+**Axis sync** (based on a real feed, 2026-10-28)
+ - The feed: about 300 VEVENTs covering a rolling window of roughly the past and current semester. Every item is **all-day** (`DTSTART;VALUE=DATE`) with no due time. Each UID is a GUID, and no UID repeats.
+ - Titles look like `Course (Level) - Section: Assignment title`, e.g. `Physics I (AP) - 4: Unit 1 Quiz`. Assignment titles can contain colons (`AP Classroom: 1.1 Daily Videos`), and course names can contain dashes (`Software Engineering - Artificial Intelligence - 1`). Split at the **first** `": "`, and treat the trailing `- N` as the section.
+ - `DESCRIPTION` (on most items) is folded across lines and contains HTML entities such as `&#160;`. Unfold and decode it into plain-text `notes`.
+ - `STATUS`, `PRIORITY`, `CLASS`, and `CATEGORIES` are identical on every item, so ignore them. The feed has **no completion status, grades, teachers, or class periods**, so the "Grade view pulled from Axis" stretch feature can't come from iCal.
+ - Mapping:
+   - each unique title prefix becomes one `classes` row (`axis_key` = full prefix; display name drops the section; color picked from a palette; teacher and period entered by the student)
+   - `UID` becomes `axis_uid`
+   - `DTSTART` becomes `due_date`, and `due_time` stays empty
+   - `type` is `test` when the title contains quiz, test, or exam, and `assignment` otherwise
+ - Connecting: the student pastes either the `https://` or `webcal://` link; the app switches `webcal://` to `https://`. The function only fetches links whose host ends in `.myschoolapp.com` and whose path is `/podium/feed/iCal.aspx`, so it can't be used to fetch arbitrary URLs.
+ - Re-syncing: the `axis-sync` function adds or updates classes and items by `axis_key` / `axis_uid`, and writes a `sync_runs` row. An item that drops out of the feed gets `axis_missing = true` instead of being deleted (the window rolls), and completed items are never touched. Run it every few hours with `pg_cron` + `pg_net`, plus a "Sync now" button. The existing `#connect-axis` and `#sync-info` buttons become real.
+ - Testing: use a small **made-up** fixture `.ics` that copies the real structure (folded lines, entities, colons in titles, dashes in course names). **Never commit a real feed or feed link**, because both contain personal data.
+ - Before relying on UIDs to prevent duplicates, download a feed twice, a day or more apart, and confirm the UIDs match.
+
+**Backend phases and owners**
+ - **Phase 0**: create the dev and prod Supabase projects and `supabase/`; first migration (schema, row-level security, profile trigger); seed data. *(Michael)*
+ - **Phase 1**: auth, `planner-store.js`, switching `app.js` over to it, importing local tasks, realtime sync, class editing. *(Michael: data layer; Priya: sign-in and class screens)*
+ - **Phase 2**: `ical-parser.js` with tests, the `axis-sync` function, scheduled re-sync, sync status in the UI. *(Bobby)*
+ - **Phase 3**: reminders (`fire_at` from `profiles.time_zone`, delivered by web push and later Expo push), searching items in the database. *(Michael and Bobby)*
+ - **Stretch**: offline queue (enabled by client ids, `updated_at`, and soft deletes), recurring items, subtasks (`parent_id`).
+
+**Still open**
+ - Are Axis UIDs stable across downloads?
+ - Does the school use Google accounts? That decides the sign-in method.
 
 ## Progress
  - 2026-10-23: Wrote the initial project plan above (features, tech stack, data model, open questions, milestones, roles).
@@ -139,3 +199,4 @@ i was here
  - 2026-10-28: Promoted the interactive duck-down fur renderer to the fundamental project-wide material for conventional buttons and button-like controls. Icon-only and icon-plus-text controls now form their symbols with the same animated fur mask as text labels, while dense repeated content controls such as calendar cells, time slots, task rows, and event blocks retain lightweight surfaces for performance and legibility. Drawer, modal, and view lifecycles continue to keep WebGL contexts limited to the active surface. This remains local-only pending approval.
  - 2026-10-28: Added `CLAUDE.md` with guidance for Claude Code: test and local-preview commands, the always-on Cursor rules (local-first release, fur as the fundamental button material with three-stage feedback, Chat Check), the plans.md collaboration procedure, and an overview of the `landing/` architecture (planner model, fur renderer and its lifecycle, interaction module, planner UI, Fur Lab). Documentation only; no public deployment was made.
 
+ - 2026-10-28: Added a **Backend Plan** section: Supabase dev/prod projects with migrations in `supabase/`; schema for profiles, classes, items (local-date deadlines, client-generated UUIDs, soft deletes), private Axis connections, sync runs, and reminders; row-level security; a `planner-store.js` data layer for the current static site with a localStorage fallback and a local-task import; and phased owners. Inspected a real Axis iCal feed to define the Axis sync design (all-day items, class taken from the title prefix, GUID UIDs, no completion or grade data) and answered the iCal part of the Axis open question. No feed link or feed data was committed. Removed a leftover test line from Procedures. Documentation only; no public deployment was made.
