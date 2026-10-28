@@ -11,7 +11,7 @@
   </head>
   <body>
     <div class="app-shell unified-shell">
-      <aside class="sidebar">
+      <aside class="sidebar" id="planner-sidebar">
         <a class="brand" href="#home" data-go="home" aria-label="DuckPlan home"><span class="brand-mark"><img src="./assets/duckplan-mascot-v8.png" alt="" /></span><span>DuckPlan</span></a>
         <button class="drawer-close" type="button" aria-label="Close navigation">×</button>
         <nav class="primary-nav" aria-label="Planner navigation">
@@ -28,7 +28,7 @@
 
       <main class="workspace unified-workspace">
         <header class="topbar compact-topbar">
-          <div class="topbar-title"><button class="sidebar-toggle" type="button" aria-label="Open navigation" aria-expanded="false"><span aria-hidden="true">☰</span></button><div><p class="eyebrow" id="page-eyebrow">Task-first planner</p><h1 id="page-title">Home</h1></div></div>
+          <div class="topbar-title"><a class="nav-open-button topbar-nav-open-button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" href="#planner-sidebar">☰</a><div><p class="eyebrow" id="page-eyebrow">Task-first planner</p><h1 id="page-title">Home</h1></div></div>
           <div class="topbar-actions">
             <label class="search-box"><span aria-hidden="true">⌕</span><span class="sr-only">Search tasks</span><input id="global-search" type="search" placeholder="Search your planner" autocomplete="off" /></label>
             <button class="icon-button" type="button" id="notification-button" aria-label="Notifications"><span aria-hidden="true">♢</span><span class="notification-dot"></span></button>
@@ -43,7 +43,7 @@
           </header>
           <div class="planner-workspace">
             <section class="panel daily-panel" aria-labelledby="daily-plan-heading">
-              <div class="panel-heading"><div><p class="section-kicker">Tasks</p><h2 id="daily-plan-heading">Today</h2><p class="panel-date" id="daily-panel-date"></p><p class="panel-progress" id="daily-panel-progress"></p></div><button type="button" class="secondary-button compact-button" id="plan-selected-date">＋ Add task</button></div>
+              <div class="panel-heading"><div><p class="section-kicker">Tasks</p><h2 id="daily-plan-heading">Today</h2><p class="panel-date" id="daily-panel-date"></p><p class="panel-progress" id="daily-panel-progress"></p></div><a class="nav-open-button home-nav-open-button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" href="#planner-sidebar">☰</a><button type="button" class="secondary-button compact-button" id="plan-selected-date">＋ Add task</button></div>
               <div class="task-section overdue-section" id="overdue-section"><button class="task-section-heading" type="button" aria-expanded="true" data-collapse="overdue"><span><span class="status-dot overdue-dot"></span>Overdue</span><strong id="overdue-count">0</strong></button><div class="daily-task-list" id="overdue-task-list"></div></div>
               <div class="task-section"><div class="task-section-heading static"><span><span class="status-dot scheduled-dot"></span>Scheduled</span><strong id="scheduled-count">0</strong></div><div class="daily-task-list" id="scheduled-task-list"></div></div>
               <div class="task-section"><div class="task-section-heading static"><span><span class="status-dot due-dot"></span>Due, not scheduled</span><strong id="unscheduled-count">0</strong></div><div class="daily-task-list" id="unscheduled-task-list"></div></div>
@@ -88,6 +88,6 @@
       <div class="modal-actions"><button class="danger-button" type="button" id="delete-task" hidden>Delete</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-task">Cancel</button><button class="primary-button" type="submit" id="save-task">Add to DuckPlan</button></div>
     </form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./planner-model.js"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js"></script>
+    <script src="./planner-model.js"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261028-fur-buttons-8"></script>
   </body>
 </html>

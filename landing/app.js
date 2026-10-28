@@ -57,8 +57,7 @@ const els = {
   },
 };
 
-const sidebarToggle = document.querySelector(".sidebar-toggle");
-const sidebarClose = document.querySelector(".drawer-close");
+const sidebarToggles = [...document.querySelectorAll("[data-open-navigation]")];
 const sidebarScrim = document.querySelector(".sidebar-scrim");
 const sidebar = document.querySelector(".sidebar");
 const workspace = document.querySelector(".workspace");
@@ -70,10 +69,11 @@ function setSidebar(open) {
   sidebar.setAttribute("aria-hidden", String(!open));
   workspace.inert = open;
   sidebarScrim.hidden = !open;
-  sidebarToggle.setAttribute("aria-expanded", String(open));
+  sidebarToggles.forEach((toggle) => toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation"));
   sidebarScrim.tabIndex = open ? 0 : -1;
   if (open) document.querySelector(".sidebar .nav-item.active")?.focus();
-  else if (wasOpen) sidebarToggle.focus();
+  else if (wasOpen) sidebarToggles.find((toggle) => toggle.getClientRects().length)?.focus();
+  requestAnimationFrame(() => setupFurMaterial());
 }
 
 function loadTasks() {
@@ -247,22 +247,25 @@ function renderCalendar() {
 }
 
 function furLabelForButton(button) {
+  if (button.matches(".profile-card")) return button.querySelector("strong")?.textContent.trim() || "Profile";
   const clone = button.cloneNode(true);
-  clone.querySelectorAll(".notification-dot, .nav-count, small, [aria-hidden='true']").forEach((element) => element.remove());
+  clone.querySelectorAll(".notification-dot, .nav-count, small").forEach((element) => element.remove());
   return clone.textContent.replace(/\s+/g, " ").trim() || button.getAttribute("aria-label") || "Button";
 }
 function shouldUseFurButton(button) {
   if (button.matches("[data-fur-button]")) return true;
-  if (button.matches(".nav-item,.icon-button,.profile-card,.class-menu,.close-button,.sidebar-toggle,.drawer-close,.sidebar-scrim,#sync-info,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-edit,.task-section-heading,.calendar-stepper button,.view-switcher button")) return false;
+  if (button.matches(".sidebar-scrim,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-section-heading")) return false;
   const text = button.textContent.replace(/\s+/g, " ").trim();
-  return Boolean(text && /[a-z0-9]/i.test(text) && !button.querySelector("[aria-hidden='true'],.notification-dot,.nav-icon,.nav-count,.avatar,small"));
+  return Boolean(text || button.getAttribute("aria-label"));
 }
 function setupFurMaterial(root = document) {
   if (!window.DuckFur) return;
   const modalOpen = els.modal.open;
-  root.querySelectorAll("button").forEach((button) => {
+  const drawerOpen = document.body.classList.contains("sidebar-open");
+  root.querySelectorAll("button, a.secondary-button, a.nav-open-button").forEach((button) => {
     const mount = shouldUseFurButton(button) && button.getClientRects().length && (!modalOpen || els.modal.contains(button));
-    if (!mount) { window.DuckFur.unmount(button); return; }
+    const activeSurface = (!drawerOpen || sidebar.contains(button)) && (!modalOpen || els.modal.contains(button));
+    if (!mount || !activeSurface || button.closest('[aria-hidden="true"]')) { window.DuckFur.unmount(button); return; }
     window.DuckFur.mount(button, { quality: "medium", density: 1, length: 5.2, stiffness: 62, damping: 22, radius: 12.8, pressRadius: 38.4, recoveryDelay: 280, pressDepth: 0.78, compression: 0.92, splay: 0.76, transitionWidth: 0.36, labelScale: 2, labelSharpness: 1.15, labelLengthScale: 0.8, labelWidthScale: 0.9, labelOrientationVariance: 0.06, labelDensity: 2.4, glyphTransition: 0.55, glyphGuardWidth: 1.4, glyphGuardStrength: 0.9, motionGuardStart: 0.12, motionGuardEnd: 0.58, boundaryLabelWidthScale: 0.72, boundaryLabelLeanScale: 0.62, fragmentGlyphMask: true, silhouette: true, label: furLabelForButton(button) });
   });
 }
@@ -307,6 +310,7 @@ function openModal(prefill = {}) {
 function closeModal() { els.modal.close(); editingTaskId = null; setupFurMaterial(); }
 
 document.addEventListener("click", (event) => {
+  const drawerDismiss = event.target.closest(".drawer-close,.sidebar-scrim"); if (drawerDismiss) setSidebar(false);
   const viewButton = event.target.closest("[data-view]"); if (viewButton) setView(viewButton.dataset.view);
   const goButton = event.target.closest("[data-go]"); if (goButton) { event.preventDefault(); setView(goButton.dataset.go); }
   const dateButton = event.target.closest("[data-date]"); if (dateButton) selectDate(dateButton.dataset.date);
@@ -326,10 +330,9 @@ document.querySelectorAll(".filter-chip").forEach((chip) => chip.addEventListene
   currentFilter = chip.dataset.filter; renderAllTasks(); setupFurMaterial();
 }));
 document.querySelectorAll("[data-calendar-view]").forEach((button) => button.addEventListener("click", () => { calendarView = button.dataset.calendarView; renderCalendar(); }));
-sidebarToggle.addEventListener("click", () => setSidebar(!document.body.classList.contains("sidebar-open")));
-sidebarClose.addEventListener("click", () => setSidebar(false));
-sidebarScrim.addEventListener("click", () => setSidebar(false));
+sidebarToggles.forEach((toggle) => toggle.addEventListener("click", () => setSidebar(true)));
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) setSidebar(false); });
+window.addEventListener("hashchange", () => { if (location.hash === "#planner-sidebar") setSidebar(true); });
 document.querySelector("#calendar-previous").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, -1)));
 document.querySelector("#calendar-next").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, 1)));
 document.querySelector("#calendar-today").addEventListener("click", () => selectDate(nowKey()));

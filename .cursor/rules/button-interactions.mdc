@@ -1,10 +1,15 @@
 ---
-description: Require distinct hover, held-press, post-release, and keyboard-focus feedback for every button-like control.
+description: Make interactive fur the fundamental DuckPlan button material with complete hover, press, release, and focus feedback.
 alwaysApply: true
 ---
 
 # Three-Stage Button Interaction Feedback
 
+- Interactive duck-down fur is the fundamental visual material for DuckPlan buttons and button-like controls. New conventional controls should use the shared fur renderer by default instead of introducing another painted button surface.
+- Text labels, icon-only labels, and icon-plus-text labels must all be formed by the same fur-strand lettering/mask system. Do not leave an icon painted or stationary on top of a fur button.
+- Preserve the native semantic label and accessible name beneath the decorative fur canvas. Icon-only controls need an explicit `aria-label`.
+- Repeated content controls such as calendar cells, time slots, task rows, and event blocks may remain lightweight non-fur surfaces when mounting individual WebGL contexts would harm performance or legibility. They still follow every interaction rule below.
+- Mount fur renderers only for the currently visible interaction surface. Release renderers in hidden views, closed drawers, and inert page regions.
 - Every enabled button and button-like control must provide three visibly distinct interaction stages, regardless of its material or visual style:
   1. **Hover:** visible while a hover-capable pointer is over the control.
   2. **Press:** immediate feedback while pointer, touch, Space, or Enter is held down.
