@@ -1,6 +1,6 @@
 # Plans and Discussion
 ## Procedures
-Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pull the agents.md file and check what has been done before beginning work, and ALWAYS record what you did in the agents.md file once finished, and ALWAYS push the agents.md file when work is being done.
+Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pull the plans.md file and check what has been done before beginning work, and ALWAYS record what you did in the plans.md file once finished, and ALWAYS push the plans.md file when work is being done. If you push, push to a non-main branch unless explicitly told. Use pull requests instead of pushing to main.
 
 ### Project Rules
  - Follow `.cursor/rules/button-interactions.mdc` for every button and button-like control across the project.
