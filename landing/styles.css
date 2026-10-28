@@ -371,7 +371,17 @@ a.secondary-button { color: var(--ink-deep); text-decoration: none; }
 }
 
 /* Unified task-first planner */
-.unified-workspace { max-width: 1800px; }
+.unified-shell { display: block; }
+.unified-shell .sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 45; width: 250px; height: 100dvh; transform: translateX(calc(-100% - 24px)); transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+.sidebar-open .unified-shell .sidebar { transform: translateX(0); }
+.drawer-close { position: absolute; top: 25px; right: 14px; display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(43,33,13,.12); border-radius: 50%; background: rgba(255,255,255,.7); font-size: 1.2rem; cursor: pointer; }
+.sidebar-scrim { position: fixed; inset: 0; z-index: 40; display: block; border: 0; background: rgba(43,33,13,.24); opacity: 0; pointer-events: none; transition: opacity 180ms ease; backdrop-filter: blur(3px); }
+.sidebar-scrim[hidden] { display: none; }
+.sidebar-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
+.unified-workspace { max-width: 1560px; }
+.topbar-title { display: flex; align-items: center; gap: 13px; }
+.sidebar-toggle { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border: 1px solid var(--material-border); border-radius: 14px; background: linear-gradient(145deg,rgba(255,255,255,.74),rgba(255,255,255,.34)); box-shadow: var(--control-shadow); font-size: 1.1rem; cursor: pointer; }
+body.sidebar-open { overflow: hidden; }
 .compact-topbar { margin-bottom: 18px; }
 .compact-topbar h1 { font-size: clamp(1.35rem, 2vw, 1.9rem); }
 .home-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 8px 0 18px; padding: 0 4px; }
@@ -477,11 +487,19 @@ a.secondary-button { color: var(--ink-deep); text-decoration: none; }
   .daily-panel, .unified-calendar-panel { min-height: 0; }
 }
 @media (max-width: 900px) {
-  .primary-nav { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .unified-shell .sidebar { width: min(310px,calc(100% - 52px)); padding: 24px 18px 20px; border-right: 1px solid rgba(255,255,255,.46); background: radial-gradient(circle at 8% 4%,rgba(255,255,255,.7),transparent 32%),linear-gradient(155deg,rgba(255,230,145,.96),rgba(248,201,67,.94) 72%,rgba(239,183,42,.96)); box-shadow: 8px 0 30px rgba(86,61,11,.16); backdrop-filter: blur(24px) saturate(150%); }
+  .unified-shell .brand { margin: 0 8px 34px; }
+  .unified-shell .primary-nav { position: static; display: grid; grid-template-columns: 1fr; gap: 7px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+  .unified-shell .nav-item { min-height: 46px; grid-template-columns: 28px 1fr auto; justify-items: stretch; gap: 9px; padding: 10px 12px; border-radius: 14px; font-size: .94rem; text-align: left; }
+  .unified-shell .nav-item.active { background: linear-gradient(145deg,rgba(255,255,255,.7),rgba(255,255,255,.34)); box-shadow: var(--control-shadow); }
+  .unified-shell .nav-icon { font-size: 1.15rem; }
+  .unified-shell .nav-count { position: static; transform: none; }
+  .unified-shell .sync-card, .unified-shell .profile-card, .unified-shell .sidebar-spacer { display: grid; }
+  .unified-shell .sidebar-spacer { display: block; }
   .home-heading { margin-top: 16px; }
 }
 @media (max-width: 700px) {
-  .compact-topbar > div:first-child { display: none; }
+  .compact-topbar .topbar-title > div { display: none; }
   .compact-topbar { position: static; padding: 10px; border-radius: 18px; }
   .calendar-toolbar { flex-direction: column; }
   .calendar-toolbar-actions { width: 100%; justify-content: flex-start; }

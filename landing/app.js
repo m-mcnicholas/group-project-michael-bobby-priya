@@ -56,6 +56,25 @@ const els = {
   },
 };
 
+const sidebarToggle = document.querySelector(".sidebar-toggle");
+const sidebarClose = document.querySelector(".drawer-close");
+const sidebarScrim = document.querySelector(".sidebar-scrim");
+const sidebar = document.querySelector(".sidebar");
+const workspace = document.querySelector(".workspace");
+
+function setSidebar(open) {
+  const wasOpen = document.body.classList.contains("sidebar-open");
+  document.body.classList.toggle("sidebar-open", open);
+  sidebar.inert = !open;
+  sidebar.setAttribute("aria-hidden", String(!open));
+  workspace.inert = open;
+  sidebarScrim.hidden = !open;
+  sidebarToggle.setAttribute("aria-expanded", String(open));
+  sidebarScrim.tabIndex = open ? 0 : -1;
+  if (open) document.querySelector(".sidebar .nav-item.active")?.focus();
+  else if (wasOpen) sidebarToggle.focus();
+}
+
 function loadTasks() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -231,7 +250,7 @@ function furLabelForButton(button) {
 }
 function shouldUseFurButton(button) {
   if (button.matches("[data-fur-button]")) return true;
-  if (button.matches(".nav-item,.icon-button,.profile-card,.class-menu,.close-button,#sync-info,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-edit,.task-section-heading,.calendar-stepper button,.view-switcher button")) return false;
+  if (button.matches(".nav-item,.icon-button,.profile-card,.class-menu,.close-button,.sidebar-toggle,.drawer-close,.sidebar-scrim,#sync-info,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-edit,.task-section-heading,.calendar-stepper button,.view-switcher button")) return false;
   const text = button.textContent.replace(/\s+/g, " ").trim();
   return Boolean(text && /[a-z0-9]/i.test(text) && !button.querySelector("[aria-hidden='true'],.notification-dot,.nav-icon,.nav-count,.avatar,small"));
 }
@@ -254,6 +273,7 @@ function setView(name) {
   els.pageTitle.textContent = next.dataset.pageTitle;
   els.pageEyebrow.textContent = next.dataset.eyebrow;
   history.replaceState(null, "", `#${normalized}`);
+  setSidebar(false);
   window.scrollTo({ top: 0, behavior: "smooth" });
   requestAnimationFrame(() => setupFurMaterial());
 }
@@ -302,6 +322,10 @@ document.querySelectorAll(".filter-chip").forEach((chip) => chip.addEventListene
   currentFilter = chip.dataset.filter; renderAllTasks(); setupFurMaterial();
 }));
 document.querySelectorAll("[data-calendar-view]").forEach((button) => button.addEventListener("click", () => { calendarView = button.dataset.calendarView; renderCalendar(); }));
+sidebarToggle.addEventListener("click", () => setSidebar(!document.body.classList.contains("sidebar-open")));
+sidebarClose.addEventListener("click", () => setSidebar(false));
+sidebarScrim.addEventListener("click", () => setSidebar(false));
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) setSidebar(false); });
 document.querySelector("#calendar-previous").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, -1)));
 document.querySelector("#calendar-next").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, 1)));
 document.querySelector("#calendar-today").addEventListener("click", () => selectDate(nowKey()));
