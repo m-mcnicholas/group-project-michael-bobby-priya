@@ -1,3 +1,4 @@
+const Model = window.DuckPlannerModel;
 const CLASS_INFO = {
   Calculus: { color: "#538fc5", soft: "#e3f0fa", code: "M", teacher: "Ms. Nguyen", period: "Period 2" },
   English: { color: "#d96f63", soft: "#fce7e1", code: "E", teacher: "Mr. Ramirez", period: "Period 4" },
@@ -7,316 +8,335 @@ const CLASS_INFO = {
 };
 
 const STORAGE_KEY = "duckplan-demo-tasks-v1";
-const DAY = 86400000;
-const today = startOfDay(new Date());
-
-function startOfDay(date) {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function isoOffset(offset) {
-  const date = new Date(today.getTime() + offset * DAY);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
+const nowKey = () => Model.todayKey();
+const relativeDate = (amount) => Model.addDays(nowKey(), amount);
+const schedule = (dayOffset, time) => `${relativeDate(dayOffset)}T${time}`;
 const DEFAULT_TASKS = [
-  { id: "calculus-practice", title: "Finish calculus practice set", className: "Calculus", dueDate: isoOffset(0), dueTime: "15:30", priority: "High", completed: false },
-  { id: "english-response", title: "Submit reading response", className: "English", dueDate: isoOffset(0), dueTime: "18:00", priority: "Medium", completed: false },
-  { id: "physics-notes", title: "Organize lab notes", className: "Physics", dueDate: isoOffset(1), dueTime: "09:00", priority: "Medium", completed: false },
-  { id: "cs-wireframe", title: "Review app wireframe", className: "Computer Science", dueDate: isoOffset(2), dueTime: "14:15", priority: "Low", completed: false },
-  { id: "english-vocab", title: "Study vocabulary cards", className: "English", dueDate: isoOffset(3), dueTime: "16:00", priority: "Medium", completed: false },
-  { id: "physics-quiz", title: "Complete motion quiz", className: "Physics", dueDate: isoOffset(-1), dueTime: "12:30", priority: "High", completed: true },
-  { id: "backpack", title: "Pack materials for Monday", className: "Personal", dueDate: isoOffset(0), dueTime: "20:00", priority: "Low", completed: true },
+  { id: "calculus-practice", title: "Finish calculus practice set", className: "Calculus", dueDate: relativeDate(0), dueTime: "17:00", scheduledStart: schedule(0, "15:30"), durationMinutes: 60, priority: "High", completed: false },
+  { id: "english-response", title: "Submit reading response", className: "English", dueDate: relativeDate(0), dueTime: "20:00", scheduledStart: null, durationMinutes: 45, priority: "Medium", completed: false },
+  { id: "physics-notes", title: "Organize lab notes", className: "Physics", dueDate: relativeDate(1), dueTime: "09:00", scheduledStart: schedule(1, "07:45"), durationMinutes: 45, priority: "Medium", completed: false },
+  { id: "cs-wireframe", title: "Review app wireframe", className: "Computer Science", dueDate: relativeDate(2), dueTime: "14:15", scheduledStart: schedule(1, "16:00"), durationMinutes: 60, priority: "Low", completed: false },
+  { id: "english-vocab", title: "Study vocabulary cards", className: "English", dueDate: relativeDate(3), dueTime: "16:00", scheduledStart: null, durationMinutes: 30, priority: "Medium", completed: false },
+  { id: "physics-quiz", title: "Complete motion quiz", className: "Physics", dueDate: relativeDate(-1), dueTime: "12:30", scheduledStart: null, durationMinutes: 45, priority: "High", completed: false },
+  { id: "backpack", title: "Pack materials for Monday", className: "Personal", dueDate: relativeDate(0), dueTime: "20:00", scheduledStart: null, durationMinutes: 30, priority: "Low", completed: true },
 ];
 
 let tasks = loadTasks();
+let selectedDate = nowKey();
+let calendarView = window.matchMedia("(max-width: 760px)").matches ? "day" : "week";
 let currentFilter = "all";
 let searchTerm = "";
-let weekOffset = 0;
+let selectedTaskId = null;
+let editingTaskId = null;
+let collapsed = { overdue: false, completed: false };
 let toastTimer;
+let observedToday = nowKey();
 
 const els = {
   navItems: [...document.querySelectorAll("[data-view]")],
   views: [...document.querySelectorAll(".view")],
-  pageTitle: document.querySelector("#page-title"),
-  pageEyebrow: document.querySelector("#page-eyebrow"),
-  todayList: document.querySelector("#today-task-list"),
-  allList: document.querySelector("#all-task-list"),
-  taskEmpty: document.querySelector("#task-empty"),
-  taskCount: document.querySelector("#task-count"),
-  doneCount: document.querySelector("#done-count"),
-  totalCount: document.querySelector("#total-count"),
-  progressFill: document.querySelector("#progress-fill"),
-  miniClassList: document.querySelector("#mini-class-list"),
-  classGrid: document.querySelector("#class-grid"),
-  calendar: document.querySelector("#week-calendar"),
-  calendarRange: document.querySelector("#calendar-range"),
-  search: document.querySelector("#global-search"),
-  modal: document.querySelector("#task-modal"),
-  form: document.querySelector("#task-form"),
-  toast: document.querySelector("#toast"),
+  pageTitle: document.querySelector("#page-title"), pageEyebrow: document.querySelector("#page-eyebrow"),
+  taskCount: document.querySelector("#task-count"), search: document.querySelector("#global-search"),
+  allList: document.querySelector("#all-task-list"), taskEmpty: document.querySelector("#task-empty"),
+  classGrid: document.querySelector("#class-grid"), calendar: document.querySelector("#planner-calendar"),
+  calendarRange: document.querySelector("#calendar-range"), modal: document.querySelector("#task-modal"),
+  form: document.querySelector("#task-form"), modalTitle: document.querySelector("#modal-title"),
+  modalKicker: document.querySelector("#modal-kicker"), deleteTask: document.querySelector("#delete-task"),
+  saveTask: document.querySelector("#save-task"), toast: document.querySelector("#toast"),
+  selectedDayLabel: document.querySelector("#selected-day-label"), selectedDateHeading: document.querySelector("#selected-date-heading"),
+  dailyProgressCopy: document.querySelector("#daily-progress-copy"), completionPercent: document.querySelector("#completion-percent"),
+  completionRing: document.querySelector("#completion-ring"), dailyEmpty: document.querySelector("#daily-empty"),
+  lists: {
+    overdue: document.querySelector("#overdue-task-list"), scheduled: document.querySelector("#scheduled-task-list"),
+    unscheduled: document.querySelector("#unscheduled-task-list"), completed: document.querySelector("#completed-task-list"),
+  },
+  counts: {
+    overdue: document.querySelector("#overdue-count"), scheduled: document.querySelector("#scheduled-count"),
+    unscheduled: document.querySelector("#unscheduled-count"), completed: document.querySelector("#completed-count"),
+  },
 };
 
 function loadTasks() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) && saved.length ? saved : structuredClone(DEFAULT_TASKS);
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const source = Array.isArray(parsed) && parsed.length ? parsed : structuredClone(DEFAULT_TASKS);
+    const migrated = Model.migrateTasks(source);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
   } catch {
-    return structuredClone(DEFAULT_TASKS);
+    return Model.migrateTasks(structuredClone(DEFAULT_TASKS));
   }
 }
-
 function saveTasks() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
-
+function safeText(value) { const span = document.createElement("span"); span.textContent = value ?? ""; return span.innerHTML; }
+function dateObject(value) { return Model.fromDateKey(value); }
+function formatLongDate(value) { return new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(dateObject(value)); }
+function formatShortDate(value) { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(dateObject(value)); }
 function formatTime(value) {
   if (!value) return "Anytime";
   const [hour, minute] = value.split(":").map(Number);
   return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(2020, 0, 1, hour, minute));
 }
-
-function formatDay(dateValue) {
-  const date = startOfDay(new Date(`${dateValue}T00:00:00`));
-  const difference = Math.round((date - today) / DAY);
-  if (difference === 0) return "Today";
-  if (difference === 1) return "Tomorrow";
-  if (difference === -1) return "Yesterday";
-  return new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" }).format(date);
+function dayRelationship(value) {
+  if (value === nowKey()) return "Today";
+  if (value === Model.addDays(nowKey(), 1)) return "Tomorrow";
+  if (value === Model.addDays(nowKey(), -1)) return "Yesterday";
+  return new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(dateObject(value));
+}
+function taskScheduleText(task) {
+  const parts = Model.scheduledParts(task);
+  return parts ? `${formatTime(parts.time)}–${formatTime(Model.scheduledEnd(task))}` : "Not scheduled";
 }
 
-function safeText(value) {
-  const span = document.createElement("span");
-  span.textContent = value;
-  return span.innerHTML;
-}
-
-function taskMarkup(task, expanded = false) {
+function taskCardMarkup(task, mode = "daily") {
   const info = CLASS_INFO[task.className] || CLASS_INFO.Personal;
-  return `<label class="task-row ${task.completed ? "completed" : ""}" style="--course-color:${info.color};--course-soft:${info.soft}">
-    <input class="task-check" type="checkbox" data-task-id="${task.id}" ${task.completed ? "checked" : ""} aria-label="Mark ${safeText(task.title)} complete" />
-    <span class="task-main"><span class="task-title">${safeText(task.title)}</span><span class="task-meta"><span class="course-dot"></span>${safeText(task.className)}${expanded ? ` · ${safeText(info.period)}` : ""}${task.priority === "High" ? '<span class="priority-tag">High</span>' : ""}</span></span>
-    <span class="task-due"><strong>${formatDay(task.dueDate)}</strong><small>${formatTime(task.dueTime)}</small></span>
-  </label>`;
+  const scheduled = Model.scheduledParts(task);
+  const due = task.dueDate ? `${formatShortDate(task.dueDate)}${task.dueTime ? ` · ${formatTime(task.dueTime)}` : ""}` : "No deadline";
+  const leading = mode === "scheduled" ? `<span class="task-time">${formatTime(scheduled.time)}</span>` : "";
+  return `<article class="daily-task-card ${task.completed ? "completed" : ""} ${task.id === selectedTaskId ? "selected" : ""}" style="--course-color:${info.color};--course-soft:${info.soft}" data-task-card="${task.id}">
+    ${leading}<input class="task-check" type="checkbox" data-task-id="${task.id}" ${task.completed ? "checked" : ""} aria-label="Mark ${safeText(task.title)} complete" />
+    <button class="task-select" type="button" data-select-task="${task.id}"><span class="task-title">${safeText(task.title)}</span><span class="task-meta"><span class="course-dot"></span>${safeText(task.className)} · ${mode === "scheduled" ? taskScheduleText(task) : `Due ${due}`}${task.priority === "High" ? '<span class="priority-tag">High</span>' : ""}</span></button>
+    <button class="task-edit" type="button" data-edit-task="${task.id}" aria-label="Edit ${safeText(task.title)}">•••</button>
+  </article>`;
 }
 
-function renderTasks() {
-  const sorted = [...tasks].sort((a, b) => `${a.dueDate}${a.dueTime}`.localeCompare(`${b.dueDate}${b.dueTime}`));
-  const todayTasks = sorted.filter((task) => task.dueDate === isoOffset(0)).slice(0, 5);
-  els.todayList.innerHTML = todayTasks.map((task) => taskMarkup(task)).join("");
+function renderDailyPlan() {
+  const groups = Model.groupForDate(tasks, selectedDate, nowKey());
+  const todayItems = [...groups.scheduled, ...groups.unscheduled, ...groups.completed];
+  const completed = todayItems.filter((task) => task.completed).length;
+  const percent = todayItems.length ? Math.round((completed / todayItems.length) * 100) : 0;
+  els.selectedDayLabel.textContent = dayRelationship(selectedDate);
+  els.selectedDateHeading.textContent = formatLongDate(selectedDate);
+  els.dailyProgressCopy.textContent = todayItems.length ? `${completed} of ${todayItems.length} tasks completed` : "No tasks planned yet";
+  els.completionPercent.textContent = `${percent}%`;
+  els.completionRing.style.setProperty("--completion", `${percent * 3.6}deg`);
+  for (const name of Object.keys(els.lists)) {
+    els.counts[name].textContent = groups[name].length;
+    els.lists[name].innerHTML = groups[name].map((task) => taskCardMarkup(task, name === "scheduled" ? "scheduled" : "daily")).join("");
+    els.lists[name].hidden = collapsed[name] || groups[name].length === 0;
+    els.lists[name].closest(".task-section").classList.toggle("is-empty", groups[name].length === 0);
+  }
+  els.dailyEmpty.hidden = groups.overdue.length + todayItems.length > 0;
+  document.querySelectorAll("[data-collapse]").forEach((button) => {
+    button.setAttribute("aria-expanded", String(!collapsed[button.dataset.collapse]));
+    button.closest(".task-section").classList.toggle("collapsed", collapsed[button.dataset.collapse]);
+  });
+}
+
+function allTaskMarkup(task) {
+  const info = CLASS_INFO[task.className] || CLASS_INFO.Personal;
+  const scheduled = Model.scheduledParts(task);
+  return `<article class="all-task-row ${task.completed ? "completed" : ""}" style="--course-color:${info.color};--course-soft:${info.soft}">
+    <input class="task-check" type="checkbox" data-task-id="${task.id}" ${task.completed ? "checked" : ""} aria-label="Mark ${safeText(task.title)} complete" />
+    <button class="task-select" type="button" data-select-task="${task.id}"><span class="task-title">${safeText(task.title)}</span><span class="task-meta"><span class="course-dot"></span>${safeText(task.className)}${scheduled ? ` · Work ${formatShortDate(scheduled.date)} at ${formatTime(scheduled.time)}` : " · Unscheduled"}</span></button>
+    <span class="task-due"><strong>${task.dueDate ? formatShortDate(task.dueDate) : "No due date"}</strong><small>${formatTime(task.dueTime)}</small></span>
+    <button class="task-edit" type="button" data-edit-task="${task.id}" aria-label="Edit ${safeText(task.title)}">•••</button>
+  </article>`;
+}
+function renderAllTasks() {
+  const sorted = [...tasks].sort((a, b) => `${a.dueDate || "9999"}${a.dueTime || "99"}`.localeCompare(`${b.dueDate || "9999"}${b.dueTime || "99"}`));
   const filtered = sorted.filter((task) => {
-    const matchesSearch = !searchTerm || `${task.title} ${task.className}`.toLowerCase().includes(searchTerm);
-    if (!matchesSearch) return false;
-    if (currentFilter === "today") return task.dueDate === isoOffset(0) && !task.completed;
-    if (currentFilter === "upcoming") return task.dueDate > isoOffset(0) && !task.completed;
+    if (searchTerm && !`${task.title} ${task.className}`.toLowerCase().includes(searchTerm)) return false;
+    if (currentFilter === "today") return task.dueDate === nowKey() && !task.completed;
+    if (currentFilter === "upcoming") return task.dueDate > nowKey() && !task.completed;
     if (currentFilter === "done") return task.completed;
     return true;
   });
-  els.allList.innerHTML = filtered.map((task) => taskMarkup(task, true)).join("");
+  els.allList.innerHTML = filtered.map(allTaskMarkup).join("");
   els.taskEmpty.hidden = filtered.length > 0;
-  const done = tasks.filter((task) => task.completed).length;
-  els.doneCount.textContent = done;
-  els.totalCount.textContent = tasks.length;
-  els.taskCount.textContent = tasks.length - done;
-  els.progressFill.style.width = `${tasks.length ? (done / tasks.length) * 100 : 0}%`;
+  els.taskCount.textContent = tasks.filter((task) => !task.completed).length;
 }
 
 function renderClasses() {
   if (window.DuckFur) els.classGrid.querySelectorAll("button").forEach((button) => window.DuckFur.unmount(button));
-  const entries = Object.entries(CLASS_INFO);
-  els.miniClassList.innerHTML = entries.slice(0, 4).map(([name, info]) => {
-    const open = tasks.filter((task) => task.className === name && !task.completed).length;
-    return `<div class="mini-class-row" style="--course-color:${info.color};--course-soft:${info.soft}"><span class="mini-class-icon">${info.code}</span><span><strong>${name}</strong><small>${info.period}</small></span><span>${open} open</span></div>`;
-  }).join("");
-  els.classGrid.innerHTML = entries.map(([name, info]) => {
+  els.classGrid.innerHTML = Object.entries(CLASS_INFO).map(([name, info]) => {
     const classTasks = tasks.filter((task) => task.className === name);
     const open = classTasks.filter((task) => !task.completed).length;
     return `<article class="class-card" style="--course-color:${info.color};--course-soft:${info.soft}"><div class="class-card-head"><span class="class-card-icon">${info.code}</span><button class="class-menu" type="button" aria-label="More options for ${name}">•••</button></div><h2>${name}</h2><p>${info.teacher} · ${info.period}</p><div class="class-stats"><div><strong>${open}</strong><span>Open tasks</span></div><div><strong>${classTasks.length}</strong><span>Total items</span></div></div></article>`;
   }).join("");
 }
 
-function mondayFor(date) {
-  const result = startOfDay(date);
-  const day = result.getDay() || 7;
-  result.setDate(result.getDate() - day + 1);
-  return result;
+function rangeLabel(dates) {
+  if (calendarView === "month") return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(dateObject(selectedDate));
+  if (dates.length === 1) return formatLongDate(dates[0]);
+  const first = formatShortDate(dates[0]);
+  const lastDate = dateObject(dates.at(-1));
+  const last = new Intl.DateTimeFormat(undefined, { month: dateObject(dates[0]).getMonth() === lastDate.getMonth() ? undefined : "short", day: "numeric", year: dates[0].slice(0, 4) === dates.at(-1).slice(0, 4) ? undefined : "numeric" }).format(lastDate);
+  return `${first}–${last}`;
 }
-
-function renderCalendar() {
-  const monday = mondayFor(new Date(today.getTime() + weekOffset * 7 * DAY));
-  const sunday = new Date(monday.getTime() + 6 * DAY);
-  const first = new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric" }).format(monday);
-  const last = new Intl.DateTimeFormat(undefined, { month: monday.getMonth() === sunday.getMonth() ? undefined : "long", day: "numeric" }).format(sunday);
-  els.calendarRange.textContent = `${first}–${last}`;
-  els.calendar.innerHTML = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(monday.getTime() + index * DAY);
-    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    const events = tasks.filter((task) => task.dueDate === iso);
-    const eventMarkup = events.map((task) => {
-      const info = CLASS_INFO[task.className] || CLASS_INFO.Personal;
-      return `<div class="calendar-event" style="--course-color:${info.color};--course-soft:${info.soft}"><strong>${safeText(task.title)}</strong><small>${formatTime(task.dueTime)} · ${safeText(task.className)}</small></div>`;
-    }).join("");
-    return `<section class="day-column ${iso === isoOffset(0) ? "today" : ""}"><div class="day-head"><span>${new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date)}</span><strong>${date.getDate()}</strong></div>${eventMarkup}</section>`;
+function deadlineChips(date) {
+  return tasks.filter((task) => task.dueDate === date && !task.completed).slice(0, 3).map((task) => {
+    const info = CLASS_INFO[task.className] || CLASS_INFO.Personal;
+    return `<button type="button" class="deadline-chip ${task.id === selectedTaskId ? "selected" : ""}" style="--course-color:${info.color}" data-select-task="${task.id}" data-edit-task="${task.id}"><span></span>${safeText(task.title)}</button>`;
   }).join("");
+}
+function layoutEvents(dayTasks) {
+  const sorted = dayTasks.map((task) => {
+    const start = Model.scheduledParts(task).minutes;
+    return { task, start, end: start + Number(task.durationMinutes || 45), lane: 0, lanes: 1 };
+  }).sort((a, b) => a.start - b.start || a.end - b.end);
+  const active = [];
+  for (const event of sorted) {
+    for (let index = active.length - 1; index >= 0; index -= 1) if (active[index].end <= event.start) active.splice(index, 1);
+    const used = new Set(active.map((item) => item.lane));
+    while (used.has(event.lane)) event.lane += 1;
+    active.push(event);
+    const count = Math.max(...active.map((item) => item.lane)) + 1;
+    active.forEach((item) => { item.lanes = Math.max(item.lanes, count); });
+  }
+  return sorted;
+}
+function renderTimeline(dates) {
+  const startHour = 7;
+  const endHour = 22;
+  const hourHeight = 62;
+  const headers = dates.map((date) => `<button type="button" class="calendar-date-button ${date === selectedDate ? "selected" : ""} ${date === nowKey() ? "today" : ""}" data-date="${date}"><span>${new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(dateObject(date))}</span><strong>${dateObject(date).getDate()}</strong></button>`).join("");
+  const deadlineRows = dates.map((date) => `<div class="deadline-cell">${deadlineChips(date)}</div>`).join("");
+  const timeLabels = Array.from({ length: endHour - startHour }, (_, index) => `<span>${formatTime(`${String(startHour + index).padStart(2, "0")}:00`)}</span>`).join("");
+  const columns = dates.map((date) => {
+    const scheduled = tasks.filter((task) => Model.scheduledParts(task)?.date === date && !task.completed);
+    const events = layoutEvents(scheduled).map(({ task, start, end, lane, lanes }) => {
+      const info = CLASS_INFO[task.className] || CLASS_INFO.Personal;
+      const top = ((start - startHour * 60) / 60) * hourHeight;
+      const height = Math.max(30, ((end - start) / 60) * hourHeight);
+      return `<button type="button" class="calendar-event-block ${task.id === selectedTaskId ? "selected" : ""}" data-select-task="${task.id}" data-edit-task="${task.id}" style="--course-color:${info.color};--course-soft:${info.soft};top:${top}px;height:${height}px;left:calc(${(lane / lanes) * 100}% + 3px);width:calc(${100 / lanes}% - 6px)"><strong>${safeText(task.title)}</strong><small>${formatTime(Model.scheduledParts(task).time)}</small></button>`;
+    }).join("");
+    const slots = Array.from({ length: endHour - startHour }, (_, index) => `<button type="button" class="calendar-slot" data-slot-date="${date}" data-slot-time="${String(startHour + index).padStart(2, "0")}:00" aria-label="Plan work on ${formatLongDate(date)} at ${formatTime(`${String(startHour + index).padStart(2, "0")}:00`)}"></button>`).join("");
+    return `<div class="timeline-column ${date === selectedDate ? "selected-day" : ""}" style="--timeline-height:${(endHour - startHour) * hourHeight}px">${slots}${events}</div>`;
+  }).join("");
+  return `<div class="timeline-calendar" style="--day-count:${dates.length};--hour-height:${hourHeight}px"><div class="timeline-corner">Due</div><div class="timeline-days">${headers}</div><div class="timeline-deadline-label">Deadlines</div><div class="timeline-deadlines">${deadlineRows}</div><div class="time-axis">${timeLabels}</div><div class="timeline-columns">${columns}</div></div>`;
+}
+function renderMonth(dates) {
+  const currentMonth = dateObject(selectedDate).getMonth();
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => `<span>${day}</span>`).join("");
+  const cells = dates.map((date) => {
+    const dayTasks = tasks.filter((task) => task.dueDate === date || Model.scheduledParts(task)?.date === date);
+    const dots = dayTasks.slice(0, 4).map((task) => `<i style="--course-color:${(CLASS_INFO[task.className] || CLASS_INFO.Personal).color}"></i>`).join("");
+    return `<button type="button" class="month-day ${date === selectedDate ? "selected" : ""} ${date === nowKey() ? "today" : ""} ${dateObject(date).getMonth() !== currentMonth ? "outside" : ""}" data-date="${date}"><strong>${dateObject(date).getDate()}</strong><span class="month-dots">${dots}</span><small>${dayTasks.length ? `${dayTasks.length} item${dayTasks.length === 1 ? "" : "s"}` : ""}</small></button>`;
+  }).join("");
+  return `<div class="month-calendar"><div class="month-weekdays">${weekdays}</div><div class="month-grid">${cells}</div></div>`;
+}
+function renderCalendar() {
+  const dates = Model.datesForView(calendarView, selectedDate);
+  els.calendarRange.textContent = rangeLabel(dates);
+  els.calendar.className = `planner-calendar ${calendarView}-view`;
+  els.calendar.innerHTML = calendarView === "month" ? renderMonth(dates) : renderTimeline(dates);
+  document.querySelectorAll("[data-calendar-view]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.calendarView === calendarView)));
 }
 
 function furLabelForButton(button) {
-  const navLabel = button.matches(".nav-item") ? button.querySelector("span:not(.nav-icon):not(.nav-count)")?.textContent : "";
-  if (navLabel?.trim()) return navLabel.trim();
-  const profileLabel = button.matches(".profile-card") ? button.querySelector("strong")?.textContent : "";
-  if (profileLabel?.trim()) return profileLabel.trim();
-  const iconLabel = button.matches(".icon-button") ? button.querySelector("[aria-hidden='true']")?.textContent : "";
-  if (iconLabel?.trim()) return iconLabel.trim();
-
   const clone = button.cloneNode(true);
   clone.querySelectorAll(".notification-dot, .nav-count, small, [aria-hidden='true']").forEach((element) => element.remove());
-  const visibleText = clone.textContent.replace(/\s+/g, " ").trim().replace(/[→←›]+$/, "").trim();
-  return visibleText || button.getAttribute("aria-label") || "Button";
+  return clone.textContent.replace(/\s+/g, " ").trim() || button.getAttribute("aria-label") || "Button";
 }
-
 function shouldUseFurButton(button) {
   if (button.matches("[data-fur-button]")) return true;
-  if (button.matches(".nav-item, .icon-button, .profile-card, .class-menu, .close-button, #sync-info")) return false;
-  if (button.querySelector("[aria-hidden='true'], .notification-dot, .nav-icon, .nav-count, .avatar, small")) return false;
+  if (button.matches(".nav-item,.icon-button,.profile-card,.class-menu,.close-button,#sync-info,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-edit,.task-section-heading,.calendar-stepper button,.view-switcher button")) return false;
   const text = button.textContent.replace(/\s+/g, " ").trim();
-  if (!text || !/[a-z0-9]/i.test(text)) return false;
-  return !/[→←›×♢⌂□✓◫⚙＋•]/u.test(text);
+  return Boolean(text && /[a-z0-9]/i.test(text) && !button.querySelector("[aria-hidden='true'],.notification-dot,.nav-icon,.nav-count,.avatar,small"));
 }
-
 function setupFurMaterial(root = document) {
   if (!window.DuckFur) return;
-  const modalIsOpen = els.modal.open;
+  const modalOpen = els.modal.open;
   root.querySelectorAll("button").forEach((button) => {
-    const shouldMount = shouldUseFurButton(button)
-      && button.getClientRects().length
-      && (!modalIsOpen || els.modal.contains(button));
-    if (!shouldMount) {
-      window.DuckFur.unmount(button);
-      return;
-    }
-    window.DuckFur.mount(button, {
-      quality: "medium",
-      density: 1,
-      length: 5.2,
-      stiffness: 62,
-      damping: 22,
-      radius: 12.8,
-      pressRadius: 38.4,
-      recoveryDelay: 280,
-      pressDepth: 0.78,
-      compression: 0.92,
-      splay: 0.76,
-      transitionWidth: 0.36,
-      labelScale: 2,
-      labelSharpness: 1.15,
-      labelLengthScale: 0.8,
-      labelWidthScale: 0.9,
-      labelOrientationVariance: 0.06,
-      labelDensity: 2.4,
-      glyphTransition: 0.55,
-      glyphGuardWidth: 1.4,
-      glyphGuardStrength: 0.9,
-      motionGuardStart: 0.12,
-      motionGuardEnd: 0.58,
-      boundaryLabelWidthScale: 0.72,
-      boundaryLabelLeanScale: 0.62,
-      fragmentGlyphMask: true,
-      silhouette: true,
-      label: furLabelForButton(button),
-    });
+    const mount = shouldUseFurButton(button) && button.getClientRects().length && (!modalOpen || els.modal.contains(button));
+    if (!mount) { window.DuckFur.unmount(button); return; }
+    window.DuckFur.mount(button, { quality: "medium", density: 1, length: 5.2, stiffness: 62, damping: 22, radius: 12.8, pressRadius: 38.4, recoveryDelay: 280, pressDepth: 0.78, compression: 0.92, splay: 0.76, transitionWidth: 0.36, labelScale: 2, labelSharpness: 1.15, labelLengthScale: 0.8, labelWidthScale: 0.9, labelOrientationVariance: 0.06, labelDensity: 2.4, glyphTransition: 0.55, glyphGuardWidth: 1.4, glyphGuardStrength: 0.9, motionGuardStart: 0.12, motionGuardEnd: 0.58, boundaryLabelWidthScale: 0.72, boundaryLabelLeanScale: 0.62, fragmentGlyphMask: true, silhouette: true, label: furLabelForButton(button) });
   });
 }
-
-function renderAll() { renderTasks(); renderClasses(); renderCalendar(); setupFurMaterial(); }
+function renderAll() { renderDailyPlan(); renderAllTasks(); renderClasses(); renderCalendar(); requestAnimationFrame(() => setupFurMaterial()); }
 
 function setView(name) {
-  const next = document.querySelector(`#view-${name}`) || document.querySelector("#view-today");
+  const normalized = ["today", "calendar"].includes(name) ? "home" : name;
+  const next = document.querySelector(`#view-${normalized}`) || document.querySelector("#view-home");
   els.views.forEach((view) => view.classList.toggle("active", view === next));
-  els.navItems.forEach((item) => {
-    const isActive = item.dataset.view === name;
-    item.classList.toggle("active", isActive);
-    if (isActive) item.setAttribute("aria-current", "page");
-    else item.removeAttribute("aria-current");
-  });
+  els.navItems.forEach((item) => { const active = item.dataset.view === normalized; item.classList.toggle("active", active); active ? item.setAttribute("aria-current", "page") : item.removeAttribute("aria-current"); });
   els.pageTitle.textContent = next.dataset.pageTitle;
   els.pageEyebrow.textContent = next.dataset.eyebrow;
-  history.replaceState(null, "", `#${name}`);
+  history.replaceState(null, "", `#${normalized}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
-  setupFurMaterial();
+  requestAnimationFrame(() => setupFurMaterial());
 }
+function showToast(message) { clearTimeout(toastTimer); els.toast.textContent = message; els.toast.classList.add("show"); toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2600); }
+function selectDate(date) { selectedDate = date; selectedTaskId = null; renderDailyPlan(); renderCalendar(); requestAnimationFrame(() => setupFurMaterial()); }
+function selectTask(id) { selectedTaskId = selectedTaskId === id ? null : id; renderDailyPlan(); renderCalendar(); }
 
-function showToast(message) {
-  clearTimeout(toastTimer);
-  els.toast.textContent = message;
-  els.toast.classList.add("show");
-  toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2600);
+function openModal(prefill = {}) {
+  editingTaskId = prefill.id || null;
+  els.form.reset();
+  const task = editingTaskId ? tasks.find((item) => item.id === editingTaskId) : null;
+  const scheduled = task ? Model.scheduledParts(task) : null;
+  els.modalTitle.textContent = task ? "Edit task" : "New task";
+  els.modalKicker.textContent = task ? "Task details" : "Plan your work";
+  els.saveTask.textContent = task ? "Save changes" : "Add to DuckPlan";
+  els.deleteTask.hidden = !task;
+  els.form.elements.title.value = task?.title || "";
+  els.form.elements.className.value = task?.className || "Calculus";
+  els.form.elements.priority.value = task?.priority || "Medium";
+  els.form.elements.dueDate.value = task?.dueDate || prefill.dueDate || selectedDate;
+  els.form.elements.dueTime.value = task?.dueTime || prefill.dueTime || "";
+  els.form.elements.scheduledDate.value = scheduled?.date || prefill.scheduledDate || "";
+  els.form.elements.scheduledTime.value = scheduled?.time || prefill.scheduledTime || "";
+  els.form.elements.durationMinutes.value = String(task?.durationMinutes || prefill.durationMinutes || 45);
+  els.modal.showModal(); setupFurMaterial(); els.form.elements.title.focus();
 }
+function closeModal() { els.modal.close(); editingTaskId = null; setupFurMaterial(); }
 
-function toggleTask(event) {
+document.addEventListener("click", (event) => {
+  const viewButton = event.target.closest("[data-view]"); if (viewButton) setView(viewButton.dataset.view);
+  const goButton = event.target.closest("[data-go]"); if (goButton) { event.preventDefault(); setView(goButton.dataset.go); }
+  const dateButton = event.target.closest("[data-date]"); if (dateButton) selectDate(dateButton.dataset.date);
+  const slot = event.target.closest("[data-slot-date]"); if (slot) openModal({ scheduledDate: slot.dataset.slotDate, scheduledTime: slot.dataset.slotTime, dueDate: slot.dataset.slotDate });
+  const select = event.target.closest("[data-select-task]"); if (select) selectTask(select.dataset.selectTask);
+  const edit = event.target.closest("[data-edit-task]"); if (edit) openModal({ id: edit.dataset.editTask });
+  const collapse = event.target.closest("[data-collapse]"); if (collapse) { collapsed[collapse.dataset.collapse] = !collapsed[collapse.dataset.collapse]; renderDailyPlan(); }
+});
+document.addEventListener("change", (event) => {
   const checkbox = event.target.closest("[data-task-id]");
   if (!checkbox) return;
-  const task = tasks.find((item) => item.id === checkbox.dataset.taskId);
-  if (!task) return;
-  task.completed = checkbox.checked;
-  saveTasks();
-  renderAll();
-  showToast(task.completed ? "Task completed. Nice work!" : "Task moved back to your list.");
-}
-
-document.addEventListener("change", toggleTask);
-els.navItems.forEach((item) => item.addEventListener("click", () => setView(item.dataset.view)));
-document.querySelectorAll("[data-go]").forEach((item) => item.addEventListener("click", (event) => { event.preventDefault(); setView(item.dataset.go); }));
+  const task = tasks.find((item) => item.id === checkbox.dataset.taskId); if (!task) return;
+  task.completed = checkbox.checked; saveTasks(); renderAll(); showToast(task.completed ? "Task completed. Nice work!" : "Task returned to your plan.");
+});
 document.querySelectorAll(".filter-chip").forEach((chip) => chip.addEventListener("click", () => {
-  document.querySelectorAll(".filter-chip").forEach((item) => {
-    item.classList.remove("active");
-    item.setAttribute("aria-pressed", "false");
-  });
-  chip.classList.add("active");
-  chip.setAttribute("aria-pressed", "true");
-  currentFilter = chip.dataset.filter;
-  renderTasks();
+  document.querySelectorAll(".filter-chip").forEach((item) => { item.classList.toggle("active", item === chip); item.setAttribute("aria-pressed", String(item === chip)); });
+  currentFilter = chip.dataset.filter; renderAllTasks(); setupFurMaterial();
 }));
-
-els.search.addEventListener("input", () => { searchTerm = els.search.value.trim().toLowerCase(); if (searchTerm) setView("tasks"); renderTasks(); });
-document.querySelector("#previous-week").addEventListener("click", () => { weekOffset -= 1; renderCalendar(); });
-document.querySelector("#next-week").addEventListener("click", () => { weekOffset += 1; renderCalendar(); });
-document.querySelector("#current-week").addEventListener("click", () => { weekOffset = 0; renderCalendar(); });
-
-const openModal = () => {
-  els.form.reset();
-  els.form.elements.dueDate.value = isoOffset(0);
-  els.form.elements.dueTime.value = "15:30";
-  els.modal.showModal();
-  setupFurMaterial();
-  els.form.elements.title.focus();
-};
-const closeModal = () => {
-  els.modal.close();
-  setupFurMaterial();
-};
-document.querySelector("#open-task-modal").addEventListener("click", openModal);
+document.querySelectorAll("[data-calendar-view]").forEach((button) => button.addEventListener("click", () => { calendarView = button.dataset.calendarView; renderCalendar(); }));
+document.querySelector("#calendar-previous").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, -1)));
+document.querySelector("#calendar-next").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, 1)));
+document.querySelector("#calendar-today").addEventListener("click", () => selectDate(nowKey()));
+document.querySelector("#plan-selected-date").addEventListener("click", () => openModal({ dueDate: selectedDate }));
+document.querySelector("#open-task-modal").addEventListener("click", () => openModal({ dueDate: selectedDate }));
 document.querySelector("#close-task-modal").addEventListener("click", closeModal);
 document.querySelector("#cancel-task").addEventListener("click", closeModal);
 els.modal.addEventListener("click", (event) => { if (event.target === els.modal) closeModal(); });
-
+els.search.addEventListener("input", () => { searchTerm = els.search.value.trim().toLowerCase(); if (searchTerm) setView("tasks"); renderAllTasks(); });
 els.form.addEventListener("submit", (event) => {
   event.preventDefault();
-  const form = new FormData(els.form);
-  const title = form.get("title").trim();
-  if (!title) return;
-  tasks.push({ id: `task-${Date.now()}`, title, className: form.get("className"), priority: form.get("priority"), dueDate: form.get("dueDate"), dueTime: form.get("dueTime"), completed: false });
-  saveTasks();
-  renderAll();
-  closeModal();
-  showToast("Task added to your plan.");
+  const form = new FormData(els.form); const title = form.get("title").trim(); if (!title) return;
+  const wasEditing = Boolean(editingTaskId);
+  const scheduledDate = form.get("scheduledDate"); const scheduledTime = form.get("scheduledTime");
+  const next = { title, className: form.get("className"), priority: form.get("priority"), dueDate: form.get("dueDate"), dueTime: form.get("dueTime"), scheduledStart: scheduledDate && scheduledTime ? `${scheduledDate}T${scheduledTime}` : null, scheduledEnd: null, durationMinutes: Number(form.get("durationMinutes") || 45), schemaVersion: 2 };
+  if (editingTaskId) Object.assign(tasks.find((task) => task.id === editingTaskId), next);
+  else tasks.push({ id: `task-${Date.now()}`, completed: false, ...next });
+  saveTasks(); renderAll(); closeModal(); showToast(wasEditing ? "Task updated." : "Task added to your plan.");
 });
-
-document.querySelector("[data-focus-task]").addEventListener("click", () => showToast("Focus timer is planned for the next prototype."));
+els.deleteTask.addEventListener("click", () => { if (!editingTaskId) return; tasks = tasks.filter((task) => task.id !== editingTaskId); saveTasks(); closeModal(); renderAll(); showToast("Task deleted."); });
 document.querySelector("#notification-button").addEventListener("click", () => showToast("You are all caught up."));
-document.querySelector("#sync-info").addEventListener("click", () => showToast("Axis sync will use an API or iCal feed once access is confirmed."));
-document.querySelector("#connect-axis").addEventListener("click", () => showToast("Axis connection is intentionally disabled in this front-end draft."));
-document.querySelector("#reset-demo").addEventListener("click", () => { tasks = structuredClone(DEFAULT_TASKS); saveTasks(); renderAll(); showToast("Demo tasks reset."); });
+document.querySelector("#sync-info").addEventListener("click", () => showToast("Axis sync remains a prototype until API or iCal access is confirmed."));
+document.querySelector("#connect-axis").addEventListener("click", () => showToast("Axis connection is intentionally disabled in this local prototype."));
+document.querySelector("#reset-demo").addEventListener("click", () => { tasks = Model.migrateTasks(structuredClone(DEFAULT_TASKS)); saveTasks(); selectedDate = nowKey(); renderAll(); showToast("Demo tasks reset."); });
+
+function refreshDateBoundary() {
+  const nextToday = nowKey();
+  if (nextToday === observedToday) return;
+  if (selectedDate === observedToday) selectedDate = nextToday;
+  observedToday = nextToday; renderAll();
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshDateBoundary(); });
+window.addEventListener("focus", refreshDateBoundary);
+setInterval(refreshDateBoundary, 60000);
 
 const requestedView = location.hash.replace("#", "");
 renderAll();
-setView(document.querySelector(`#view-${requestedView}`) ? requestedView : "today");
+setView(document.querySelector(`#view-${requestedView}`) || ["today", "calendar"].includes(requestedView) ? requestedView : "home");
