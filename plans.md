@@ -1,5 +1,6 @@
 # Plans and Discussion
 ## Procedures
+ - 2026-10-28: Created and deployed the verified planner and fur lab to https://duckplan-mbp.weitaoyu448.chatgpt.site using ChatGPT Sites. Site project identity is stored in `.openai/hosting.json`; prepare static output with `node scripts/prepare-sites.mjs`. Initial deployment is owner-private because automatic approval review rejected the public access change; explicit public access approval is pending. GitHub pushes do not automatically deploy this Site.
 Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pull the agents.md file and check what has been done before beginning work, and ALWAYS record what you did in the agents.md file once finished, and ALWAYS push the agents.md file when work is being done.
 
 ### Project Rules
