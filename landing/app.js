@@ -46,6 +46,7 @@ const els = {
   selectedDayLabel: document.querySelector("#selected-day-label"), selectedDateHeading: document.querySelector("#selected-date-heading"),
   dailyProgressCopy: document.querySelector("#daily-progress-copy"), completionPercent: document.querySelector("#completion-percent"),
   completionRing: document.querySelector("#completion-ring"), dailyEmpty: document.querySelector("#daily-empty"),
+  dailyPanelDate: document.querySelector("#daily-panel-date"), dailyPanelProgress: document.querySelector("#daily-panel-progress"),
   lists: {
     overdue: document.querySelector("#overdue-task-list"), scheduled: document.querySelector("#scheduled-task-list"),
     unscheduled: document.querySelector("#unscheduled-task-list"), completed: document.querySelector("#completed-task-list"),
@@ -127,6 +128,8 @@ function renderDailyPlan() {
   els.selectedDayLabel.textContent = dayRelationship(selectedDate);
   els.selectedDateHeading.textContent = formatLongDate(selectedDate);
   els.dailyProgressCopy.textContent = todayItems.length ? `${completed} of ${todayItems.length} tasks completed` : "No tasks planned yet";
+  els.dailyPanelDate.textContent = formatLongDate(selectedDate);
+  els.dailyPanelProgress.textContent = todayItems.length ? `${completed} of ${todayItems.length} completed` : "No tasks planned yet";
   els.completionPercent.textContent = `${percent}%`;
   els.completionRing.style.setProperty("--completion", `${percent * 3.6}deg`);
   for (const name of Object.keys(els.lists)) {
@@ -268,6 +271,7 @@ function renderAll() { renderDailyPlan(); renderAllTasks(); renderClasses(); ren
 function setView(name) {
   const normalized = ["today", "calendar"].includes(name) ? "home" : name;
   const next = document.querySelector(`#view-${normalized}`) || document.querySelector("#view-home");
+  document.body.dataset.view = normalized;
   els.views.forEach((view) => view.classList.toggle("active", view === next));
   els.navItems.forEach((item) => { const active = item.dataset.view === normalized; item.classList.toggle("active", active); active ? item.setAttribute("aria-current", "page") : item.removeAttribute("aria-current"); });
   els.pageTitle.textContent = next.dataset.pageTitle;
