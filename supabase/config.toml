@@ -1,0 +1,30 @@
+# Supabase CLI settings for the local stack (`supabase start`). Hosted dev/prod projects are
+# configured in the Supabase dashboard; see supabase/README.md.
+project_id = "duckplan"
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+site_url = "http://127.0.0.1:8000"
+additional_redirect_urls = ["http://127.0.0.1:8000/", "http://localhost:8000/", "https://duckplan-mbp.netlify.app/"]
+
+[auth.email]
+enable_signup = true
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+
+# axis-sync checks the caller itself (a user JWT, or the cron secret for scheduled runs).
+[functions.axis-sync]
+verify_jwt = false
