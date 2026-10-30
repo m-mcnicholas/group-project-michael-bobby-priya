@@ -543,3 +543,19 @@ body[data-view="home"] .planner-calendar { min-height: 0; flex: 1; }
   .calendar-date-button:hover, .month-day:hover { background: #fff8df; }
   .calendar-event-block:hover { z-index: 4; filter: brightness(.96); transform: translateY(-1px); }
 }
+
+/* Accounts, Axis connection, and class editing */
+.settings-group > .settings-row:first-child { border-top: 1px solid var(--line); }
+.settings-panel > .settings-group:first-child > .settings-row:first-child { border-top: 0; }
+.settings-form, .settings-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.settings-form label { flex: 1 1 260px; }
+.settings-form input { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink-deep); background: #fffdf7; }
+.settings-row p code { padding: 1px 5px; border-radius: 6px; background: #f6efd9; font-size: 0.8rem; }
+.settings-row button:disabled { opacity: 0.55; cursor: progress; }
+.classes-toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+.class-modal { width: min(520px, calc(100% - 28px)); }
+.class-modal input[type="color"] { padding: 4px 6px; cursor: pointer; }
+@media (max-width: 760px) {
+  .settings-form, .settings-actions { width: 100%; justify-content: flex-start; }
+}
+.settings-row[hidden] { display: none; }

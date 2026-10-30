@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-DuckPlan is an 11th-grade group project (Michael, Bobby, Priya): a student planner that combines a calendar and a task list, syncs with Axis, and sorts everything by class, with subtle duck theming. The long-term plan (TypeScript + Expo/React Native, Supabase, Electron desktop, Axis via iCal or a server-side function) lives in `plans.md`. None of that stack exists yet. What exists today is a buildless static prototype in `landing/`.
+DuckPlan is an 11th-grade group project (Michael, Bobby, Priya): a student planner that combines a calendar and a task list, syncs with Axis, and sorts everything by class, with subtle duck theming. The long-term plan (TypeScript + Expo/React Native, Supabase, Electron desktop, Axis via iCal or a server-side function) lives in `plans.md`. The Expo/Electron apps don't exist yet. What exists today is a buildless static site in `landing/` backed by the Supabase backend in `supabase/` (see `supabase/README.md`). The site stays local-only until `landing/supabase-config.js` is filled in.
 
 ## Collaboration procedure (from `plans.md`)
 
@@ -37,11 +37,15 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory landing
 
 Plain HTML/CSS/JS with no modules or bundler. Scripts load in order through `<script>` tags and talk to each other via globals:
 
+Load order: `planner-model.js`, `ical-parser.js`, `supabase-config.js`, `planner-store.js`, `fur-material.js`, `button-interactions.js`, `app.js`.
+
 1. `planner-model.js` is a UMD-style module (`window.DuckPlannerModel` in the browser, `module.exports` in Node). It holds pure planner logic: local-time date keys (`YYYY-MM-DD`, never UTC), Day/Week/Month date ranges, task grouping, and `migrateTasks`. Tasks keep the **deadline** (`dueDate`/`dueTime`) separate from optional **scheduled work** (`scheduledStart` plus duration). Migration must never invent a schedule from an old due time.
 2. `fur-material.js` is an IIFE that exposes `window.DuckFur` (`mount`, `mountAll`, `unmount`, `defaults`, and `__testing`). It is a native WebGL2 instanced-strand fur renderer. Each mounted host gets its own canvas and WebGL context. It falls back to a static PNG when WebGL2 is missing or the context is lost.
 3. `button-interactions.js` is an IIFE that implements the three-stage rule for standard controls by adding the `interaction-pressed` and `interaction-released` classes. It is loaded by both pages.
-4. `app.js` is the planner UI (`const Model = window.DuckPlannerModel`). Home is a full-viewport workspace with two linked panels, Tasks and Calendar (Day/Week/Month). Desktop defaults to Week and phones default to Day. Selecting a date updates the task panel, and clicking an empty slot prefills the task sheet. Navigation is an off-canvas drawer (`body.sidebar-open`). Demo data is hard-coded (`CLASS_INFO`) and persisted to `localStorage` under `duckplan-demo-tasks-v1`. Axis sync, auth, cloud persistence, notifications, and drag-and-drop are intentionally not implemented yet. `index.html` loads `app.js` with a `?v=` cache-busting query, so bump it when `app.js` changes.
-5. `fur-lab.html` + `fur-lab.js` form a tuning lab for the fur material. It is reachable from Settings → Interactive fur lab.
+4. `app.js` is the planner UI (`const Model = window.DuckPlannerModel`). Home is a full-viewport workspace with two linked panels, Tasks and Calendar (Day/Week/Month). Desktop defaults to Week and phones default to Day. Selecting a date updates the task panel, and clicking an empty slot prefills the task sheet. Navigation is an off-canvas drawer (`body.sidebar-open`). Tasks reference classes by `classId`; look classes up with `store.classById`. Settings holds the Account (magic link / Google), local-task import, and Axis connect/sync rows; Classes has add/edit/archive through `#class-modal`. Notifications and drag-and-drop are intentionally not implemented yet. `index.html` loads `app.js` and `planner-store.js` with a `?v=` cache-busting query, so bump it when they change.
+5. `planner-store.js` (`window.DuckPlannerStore`, UMD) is the **only** code that reads or writes planner data. It keeps an in-memory cache (`listItems(range)`, `listClasses`, `classById` are synchronous), applies mutations optimistically (`upsertItem`, `toggleComplete`, `deleteItem`, `upsertClass`), and notifies `subscribe` listeners. Signed in, it uses Supabase (supabase-js loaded from jsDelivr only when configured, PKCE auth, soft deletes, Realtime on `items`/`classes`); otherwise it uses `localStorage` (`duckplan-demo-tasks-v1`, `duckplan-demo-classes-v1`) and migrates legacy `className` tasks to `classId`. App task fields are camelCase; `taskToRow`/`rowToTask` map them to the snake_case columns.
+6. `ical-parser.js` (`window.DuckAxisIcal`, UMD) parses Axis iCal feeds, validates feed links (`normalizeFeedUrl`), and plans re-syncs (`planAxisSync`). `supabase/functions/axis-sync/ical-parser.js` must stay a byte-identical copy; after editing, run `cp landing/ical-parser.js supabase/functions/axis-sync/ical-parser.js`.
+7. `fur-lab.html` + `fur-lab.js` form a tuning lab for the fur material. It is reachable from Settings → Interactive fur lab.
 
 How fur buttons are integrated (`app.js` `shouldUseFurButton` / `setupFurMaterial`):
 - Fur mounts on every visible `button`, `a.secondary-button`, and `a.nav-open-button` that has text or an `aria-label`, except the dense content controls excluded by class in `shouldUseFurButton` (`.calendar-slot`, `.calendar-event-block`, `.month-day`, `.task-select`, etc.). `data-fur-button` forces it on.
@@ -54,4 +58,7 @@ How fur buttons are integrated (`app.js` `shouldUseFurButton` / `setupFurMateria
 ## Tests
 
 - `tests/planner-model.test.cjs` `require`s `landing/planner-model.js` directly and covers date math, legacy-task migration, and calendar grouping.
+- `tests/planner-store.test.cjs` covers the row mappers, local mode, local-task import, and cloud mode against a fake supabase-js client.
+- `tests/ical-parser.test.cjs` parses the made-up `tests/fixtures/axis-feed.ics` and covers title splitting, link validation, and re-sync planning. Never commit a real feed or feed link.
+- `sh supabase/tests/run-local.sh` applies the migrations and seed to a throwaway Docker Postgres and runs `supabase/tests/rls.test.sql`.
 - `tests/fur-material.test.cjs` stubs `global.window = {}`, `require`s `landing/fur-material.js`, and tests the pure/simulation helpers exported on `window.DuckFur.__testing`. To make a new internal testable, add it to that `__testing` export.

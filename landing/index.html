@@ -20,7 +20,7 @@
           <button class="nav-item" type="button" data-view="classes"><span class="nav-icon" aria-hidden="true">◫</span><span>Classes</span></button>
           <button class="nav-item" type="button" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></button>
         </nav>
-        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Prototype mode</p></div><button type="button" id="sync-info" aria-label="Learn about Axis sync">i</button></section>
+        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Not signed in</p></div><button type="button" id="sync-info" aria-label="Set up Axis sync">↻</button></section>
         <div class="sidebar-spacer"></div>
         <button class="profile-card" type="button" data-go="settings" aria-label="Open Bobby's settings"><span class="avatar" aria-hidden="true">BZ</span><span><strong>Bobby</strong><small>Student account</small></span><span aria-hidden="true">›</span></button>
       </aside>
@@ -69,12 +69,13 @@
           <div class="panel-heading task-heading"><div><p class="section-kicker">Everything in one place</p><h2>All tasks</h2></div><div class="filter-row" role="group" aria-label="Filter tasks"><button class="filter-chip active" type="button" data-filter="all" aria-pressed="true">All</button><button class="filter-chip" type="button" data-filter="today" aria-pressed="false">Today</button><button class="filter-chip" type="button" data-filter="upcoming" aria-pressed="false">Upcoming</button><button class="filter-chip" type="button" data-filter="done" aria-pressed="false">Done</button></div></div>
           <div class="task-list expanded" id="all-task-list"></div><div class="empty-state" id="task-empty" hidden><img src="./assets/duckplan-mascot-v8.png" alt="" /><h3>Nothing here yet.</h3><p>Try another filter or add a new task.</p></div>
         </section></section>
-        <section class="view" id="view-classes" data-page-title="Classes" data-eyebrow="Keep every class sorted"><div class="class-grid" id="class-grid"></div></section>
+        <section class="view" id="view-classes" data-page-title="Classes" data-eyebrow="Keep every class sorted"><div class="classes-toolbar"><button type="button" class="secondary-button" id="add-class">＋ Add class</button></div><div class="class-grid" id="class-grid"></div></section>
         <section class="view" id="view-settings" data-page-title="Settings" data-eyebrow="Make DuckPlan yours"><section class="panel settings-panel">
-          <div class="settings-row"><div><h2>Axis connection</h2><p>Import classes and assignments when integration details are confirmed.</p></div><button type="button" class="secondary-button" id="connect-axis">Connect later</button></div>
+          <div id="account-settings" class="settings-group"></div>
+          <div id="axis-settings" class="settings-group"></div>
           <div class="settings-row"><div><h2>Reminders</h2><p>Get a nudge before important assignments are due.</p></div><label class="switch"><input type="checkbox" checked /><span></span><span class="sr-only">Enable reminders</span></label></div>
           <div class="settings-row"><div><h2>Interactive fur lab</h2><p>Inspect DuckPlan's approved procedural duck-down material.</p></div><a class="secondary-button" href="./fur-lab.html">Open material lab</a></div>
-          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset this prototype without affecting any external account.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
+          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset the tasks saved in this browser without affecting any account.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
         </section></section>
       </main>
     </div>
@@ -82,12 +83,19 @@
     <dialog class="task-modal" id="task-modal"><form method="dialog" id="task-form">
       <div class="modal-heading"><div><p class="section-kicker" id="modal-kicker">Plan your work</p><h2 id="modal-title">New task</h2></div><button class="close-button" type="button" id="close-task-modal" aria-label="Close">×</button></div>
       <label>Task name<input name="title" required maxlength="80" placeholder="What needs to get done?" /></label>
-      <div class="form-grid"><label>Class<select name="className"><option>Calculus</option><option>English</option><option>Physics</option><option>Computer Science</option><option>Personal</option></select></label><label>Priority<select name="priority"><option>Medium</option><option>High</option><option>Low</option></select></label></div>
+      <div class="form-grid"><label>Class<select name="classId"></select></label><label>Priority<select name="priority"><option>Medium</option><option>High</option><option>Low</option></select></label></div>
       <fieldset class="form-section"><legend>Deadline</legend><p>When this must be finished.</p><div class="form-grid"><label>Due date<input name="dueDate" type="date" /></label><label>Due time<input name="dueTime" type="time" /></label></div></fieldset>
       <fieldset class="form-section"><legend>Scheduled work</legend><p>When you plan to work on it. This is independent from the deadline.</p><div class="form-grid schedule-grid"><label>Work date<input name="scheduledDate" type="date" /></label><label>Start time<input name="scheduledTime" type="time" /></label><label>Duration<select name="durationMinutes"><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option></select></label></div></fieldset>
       <div class="modal-actions"><button class="danger-button" type="button" id="delete-task" hidden>Delete</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-task">Cancel</button><button class="primary-button" type="submit" id="save-task">Add to DuckPlan</button></div>
     </form></dialog>
+    <dialog class="task-modal class-modal" id="class-modal"><form method="dialog" id="class-form">
+      <div class="modal-heading"><div><p class="section-kicker">Classes</p><h2 id="class-modal-title">New class</h2></div><button class="close-button" type="button" id="close-class-modal" aria-label="Close">×</button></div>
+      <label>Class name<input name="name" required maxlength="120" placeholder="Physics I (AP)" /></label>
+      <div class="form-grid"><label>Teacher<input name="teacher" maxlength="80" placeholder="Dr. Shah" /></label><label>Period<input name="period" maxlength="40" placeholder="Period 5" /></label></div>
+      <div class="form-grid"><label>Short label<input name="code" maxlength="3" placeholder="P" /></label><label>Color<input name="color" type="color" value="#538fc5" /></label></div>
+      <div class="modal-actions"><button class="danger-button" type="button" id="archive-class" hidden>Archive</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-class">Cancel</button><button class="primary-button" type="submit">Save class</button></div>
+    </form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./planner-model.js"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261028-fur-buttons-8"></script>
+    <script src="./planner-model.js"></script><script src="./ical-parser.js"></script><script src="./supabase-config.js"></script><script src="./planner-store.js?v=20261030-backend-1"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261030-backend-1"></script>
   </body>
 </html>
