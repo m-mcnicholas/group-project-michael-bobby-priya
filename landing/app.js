@@ -67,13 +67,19 @@ function setSidebar(open) {
   document.body.classList.toggle("sidebar-open", open);
   sidebar.inert = !open;
   sidebar.setAttribute("aria-hidden", String(!open));
-  workspace.inert = open;
-  sidebarScrim.hidden = !open;
-  sidebarToggles.forEach((toggle) => toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation"));
-  sidebarScrim.tabIndex = open ? 0 : -1;
-  if (open) document.querySelector(".sidebar .nav-item.active")?.focus();
-  else if (wasOpen) sidebarToggles.find((toggle) => toggle.getClientRects().length)?.focus();
-  requestAnimationFrame(() => setupFurMaterial());
+  // Docked navigation shares the workspace plane; the main page stays usable.
+  workspace.inert = false;
+  sidebarScrim.hidden = true;
+  sidebarToggles.forEach(toggle => {
+    toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+    toggle.setAttribute("aria-expanded", String(open));
+    const glyph = toggle.querySelector("[data-sidebar-glyph]");
+    if (glyph) glyph.textContent = open ? "‹" : "›";
+  });
+  sidebarScrim.tabIndex = -1;
+  if (open) document.querySelector(".sidebar .nav-item.active")?.focus({preventScroll:true});
+  else if (wasOpen) sidebarToggles.find(toggle => toggle.getClientRects().length)?.focus({preventScroll:true});
+  requestAnimationFrame(() => setupButtonMaterial());
 }
 
 function loadTasks() {
@@ -170,7 +176,6 @@ function renderAllTasks() {
 }
 
 function renderClasses() {
-  if (window.DuckFur) els.classGrid.querySelectorAll("button").forEach((button) => window.DuckFur.unmount(button));
   els.classGrid.innerHTML = Object.entries(CLASS_INFO).map(([name, info]) => {
     const classTasks = tasks.filter((task) => task.className === name);
     const open = classTasks.filter((task) => !task.completed).length;
@@ -246,32 +251,16 @@ function renderCalendar() {
   document.querySelectorAll("[data-calendar-view]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.calendarView === calendarView)));
 }
 
-function furLabelForButton(button) {
-  if (button.matches(".profile-card")) return button.querySelector("strong")?.textContent.trim() || "Profile";
-  const clone = button.cloneNode(true);
-  clone.querySelectorAll(".notification-dot, .nav-count, small").forEach((element) => element.remove());
-  return clone.textContent.replace(/\s+/g, " ").trim() || button.getAttribute("aria-label") || "Button";
-}
-function shouldUseFurButton(button) {
-  if (button.matches("[data-fur-button]")) return true;
-  if (button.matches(".sidebar-scrim,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-section-heading")) return false;
-  const text = button.textContent.replace(/\s+/g, " ").trim();
-  return Boolean(text || button.getAttribute("aria-label"));
-}
-function setupFurMaterial(root = document) {
-  if (!window.DuckFur) return;
-  const modalOpen = els.modal.open;
-  const drawerOpen = document.body.classList.contains("sidebar-open");
-  root.querySelectorAll("button, a.secondary-button, a.nav-open-button").forEach((button) => {
-    const mount = shouldUseFurButton(button) && button.getClientRects().length && (!modalOpen || els.modal.contains(button));
-    const activeSurface = (!drawerOpen || sidebar.contains(button)) && (!modalOpen || els.modal.contains(button));
-    if (!mount || !activeSurface || button.closest('[aria-hidden="true"]')) { window.DuckFur.unmount(button); return; }
-    window.DuckFur.mount(button, { quality: "medium", density: 1, length: 5.2, stiffness: 62, damping: 22, radius: 12.8, pressRadius: 38.4, recoveryDelay: 280, pressDepth: 0.78, compression: 0.92, splay: 0.76, transitionWidth: 0.36, labelScale: 2, labelSharpness: 1.15, labelLengthScale: 0.8, labelWidthScale: 0.9, labelOrientationVariance: 0.06, labelDensity: 2.4, glyphTransition: 0.55, glyphGuardWidth: 1.4, glyphGuardStrength: 0.9, motionGuardStart: 0.12, motionGuardEnd: 0.58, boundaryLabelWidthScale: 0.72, boundaryLabelLeanScale: 0.62, fragmentGlyphMask: true, silhouette: true, label: furLabelForButton(button) });
+// Native labels remain sharp; lightweight CSS glass replaces live fur canvases.
+function setupButtonMaterial(root = document) {
+  const contentControls = ".sidebar-scrim,.calendar-slot,.calendar-date-button,.calendar-event-block,.deadline-chip,.month-day,.task-select,.task-section-heading";
+  root.querySelectorAll("button, a.secondary-button, a.nav-open-button").forEach(button => {
+    button.classList.toggle("glass-button", !button.matches(contentControls));
   });
 }
-function renderAll() { renderDailyPlan(); renderAllTasks(); renderClasses(); renderCalendar(); requestAnimationFrame(() => setupFurMaterial()); }
+function renderAll() { renderDailyPlan(); renderAllTasks(); renderClasses(); renderCalendar(); requestAnimationFrame(() => setupButtonMaterial()); }
 
-function setView(name) {
+function setView(name, preserveDrawer = false) {
   const normalized = ["today", "calendar"].includes(name) ? "home" : name;
   const next = document.querySelector(`#view-${normalized}`) || document.querySelector("#view-home");
   document.body.dataset.view = normalized;
@@ -280,20 +269,27 @@ function setView(name) {
   els.pageTitle.textContent = next.dataset.pageTitle;
   els.pageEyebrow.textContent = next.dataset.eyebrow;
   history.replaceState(null, "", `#${normalized}`);
-  setSidebar(false);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  requestAnimationFrame(() => setupFurMaterial());
+  if(!preserveDrawer) setSidebar(false);
+  window.scrollTo({ top: 0, behavior: "instant" });
+  requestAnimationFrame(() => setupButtonMaterial());
 }
 function showToast(message) { clearTimeout(toastTimer); els.toast.textContent = message; els.toast.classList.add("show"); toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2600); }
-function selectDate(date) { selectedDate = date; selectedTaskId = null; renderDailyPlan(); renderCalendar(); requestAnimationFrame(() => setupFurMaterial()); }
-function selectTask(id) { selectedTaskId = selectedTaskId === id ? null : id; renderDailyPlan(); renderCalendar(); }
+function selectDate(date) { selectedDate = date; selectedTaskId = null; renderDailyPlan(); renderCalendar(); requestAnimationFrame(() => setupButtonMaterial()); }
+function selectTask(id) { selectedTaskId = selectedTaskId === id ? null : id; renderDailyPlan(); renderCalendar(); setupButtonMaterial(); }
 
+let modalAnchor = null;
+let modalClosing = false;
 function openModal(prefill = {}) {
+  modalAnchor = DuckPopupMotion.capture(prefill.source || document.activeElement);
+  modalClosing = false;
+  els.modal.inert = false;
   editingTaskId = prefill.id || null;
   els.form.reset();
   const task = editingTaskId ? tasks.find((item) => item.id === editingTaskId) : null;
   const scheduled = task ? Model.scheduledParts(task) : null;
-  els.modalTitle.textContent = task ? "Edit task" : "New task";
+  els.modalTitle.textContent = task ? "Edit task" : "Add task";
+  els.modal.style.setProperty("--popup-tint",modalAnchor?.material.tint || "rgba(248,201,67,.72)");
+  els.modal.style.setProperty("--popup-sheen",modalAnchor?.material.sheen || "none");
   els.modalKicker.textContent = task ? "Task details" : "Plan your work";
   els.saveTask.textContent = task ? "Save changes" : "Add to DuckPlan";
   els.deleteTask.hidden = !task;
@@ -305,19 +301,48 @@ function openModal(prefill = {}) {
   els.form.elements.scheduledDate.value = scheduled?.date || prefill.scheduledDate || "";
   els.form.elements.scheduledTime.value = scheduled?.time || prefill.scheduledTime || "";
   els.form.elements.durationMinutes.value = String(task?.durationMinutes || prefill.durationMinutes || 45);
-  els.modal.showModal(); setupFurMaterial(); els.form.elements.title.focus();
+  DuckPopupMotion.mark(modalAnchor,"fields");
+  DuckPopupMotion.open(els.modal, modalAnchor, () => {
+    if (!modalClosing && els.modal.open && (!els.modal.contains(document.activeElement) || document.activeElement === els.modal)) {
+      els.form.elements.title.focus({preventScroll:true});
+    }
+  });
 }
-function closeModal() { els.modal.close(); editingTaskId = null; setupFurMaterial(); }
+function closeModal() {
+  if (!els.modal.open || modalClosing) return;
+  modalClosing = true;
+  els.modal.inert = true;
+  DuckPopupMotion.close(els.modal, modalAnchor, () => {
+    els.modal.close();
+    els.modal.inert = false;
+    modalClosing = false;
+    const returnTarget = modalAnchor?.element?.isConnected ? modalAnchor.element : document.querySelector(".view.active button");
+    returnTarget?.focus({preventScroll:true});
+  });
+}
+els.modal.addEventListener("cancel", event => { event.preventDefault(); closeModal(); });
+// Every dismissal path releases modal state only after its return animation.
+els.modal.addEventListener("close", () => {
+  if (els.modal.open) return;
+  DuckPopupMotion.reset(els.modal);
+  editingTaskId = null;
+});
+
+// Button-origin motion belongs to popout dialogs, not page or calendar changes.
+function commitMaterialAction(source, update, event) {
+  update();
+  setupButtonMaterial();
+}
 
 document.addEventListener("click", (event) => {
   const drawerDismiss = event.target.closest(".drawer-close,.sidebar-scrim"); if (drawerDismiss) setSidebar(false);
-  const viewButton = event.target.closest("[data-view]"); if (viewButton) setView(viewButton.dataset.view);
-  const goButton = event.target.closest("[data-go]"); if (goButton) { event.preventDefault(); setView(goButton.dataset.go); }
+  const viewButton = event.target.closest("[data-view]"); if (viewButton?.matches("button")) commitMaterialAction(viewButton,()=>setView(viewButton.dataset.view,sidebar.contains(viewButton)),event);
+  const goButton = event.target.closest("[data-go]"); if (goButton) { event.preventDefault(); commitMaterialAction(goButton,()=>setView(goButton.dataset.go,sidebar.contains(goButton)),event); }
   const dateButton = event.target.closest("[data-date]"); if (dateButton) selectDate(dateButton.dataset.date);
-  const slot = event.target.closest("[data-slot-date]"); if (slot) openModal({ scheduledDate: slot.dataset.slotDate, scheduledTime: slot.dataset.slotTime, dueDate: slot.dataset.slotDate });
+  const slot = event.target.closest("[data-slot-date]"); if (slot) openModal({ source: slot, scheduledDate: slot.dataset.slotDate, scheduledTime: slot.dataset.slotTime, dueDate: slot.dataset.slotDate });
   const select = event.target.closest("[data-select-task]"); if (select) selectTask(select.dataset.selectTask);
-  const edit = event.target.closest("[data-edit-task]"); if (edit) openModal({ id: edit.dataset.editTask });
-  const collapse = event.target.closest("[data-collapse]"); if (collapse) { collapsed[collapse.dataset.collapse] = !collapsed[collapse.dataset.collapse]; renderDailyPlan(); }
+  const edit = event.target.closest("[data-edit-task]"); if (edit) openModal({ source: edit, id: edit.dataset.editTask });
+  const collapse = event.target.closest("[data-collapse]"); if (collapse) { collapsed[collapse.dataset.collapse] = !collapsed[collapse.dataset.collapse]; renderDailyPlan(); setupButtonMaterial(); }
 });
 document.addEventListener("change", (event) => {
   const checkbox = event.target.closest("[data-task-id]");
@@ -327,20 +352,24 @@ document.addEventListener("change", (event) => {
 });
 document.querySelectorAll(".filter-chip").forEach((chip) => chip.addEventListener("click", () => {
   document.querySelectorAll(".filter-chip").forEach((item) => { item.classList.toggle("active", item === chip); item.setAttribute("aria-pressed", String(item === chip)); });
-  currentFilter = chip.dataset.filter; renderAllTasks(); setupFurMaterial();
+  currentFilter = chip.dataset.filter; renderAllTasks(); setupButtonMaterial();
 }));
-document.querySelectorAll("[data-calendar-view]").forEach((button) => button.addEventListener("click", () => { calendarView = button.dataset.calendarView; renderCalendar(); }));
-sidebarToggles.forEach((toggle) => toggle.addEventListener("click", () => setSidebar(true)));
-document.addEventListener("keydown", (event) => { if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) setSidebar(false); });
+document.querySelectorAll("[data-calendar-view]").forEach((button) => button.addEventListener("click", (event) => commitMaterialAction(button,() => { calendarView = button.dataset.calendarView; renderCalendar(); },event)));
+sidebarToggles.forEach((toggle) => toggle.addEventListener("click", event => { event.preventDefault(); setSidebar(!document.body.classList.contains("sidebar-open")); }));
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !els.modal.open && document.body.classList.contains("sidebar-open")) setSidebar(false); });
 window.addEventListener("hashchange", () => { if (location.hash === "#planner-sidebar") setSidebar(true); });
 document.querySelector("#calendar-previous").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, -1)));
 document.querySelector("#calendar-next").addEventListener("click", () => selectDate(Model.shiftView(calendarView, selectedDate, 1)));
 document.querySelector("#calendar-today").addEventListener("click", () => selectDate(nowKey()));
-document.querySelector("#plan-selected-date").addEventListener("click", () => openModal({ dueDate: selectedDate }));
-document.querySelector("#open-task-modal").addEventListener("click", () => openModal({ dueDate: selectedDate }));
+document.querySelector("#plan-selected-date").addEventListener("click", event => openModal({ source: event.currentTarget, dueDate: selectedDate }));
+document.querySelector("#open-task-modal").addEventListener("click", event => openModal({ source: event.currentTarget, dueDate: selectedDate }));
 document.querySelector("#close-task-modal").addEventListener("click", closeModal);
 document.querySelector("#cancel-task").addEventListener("click", closeModal);
-els.modal.addEventListener("click", (event) => { if (event.target === els.modal) closeModal(); });
+els.modal.addEventListener("click", event => {
+  if (event.target !== els.modal) return;
+  const box=els.modal.getBoundingClientRect();
+  if(event.clientX<box.left || event.clientX>box.right || event.clientY<box.top || event.clientY>box.bottom)closeModal();
+});
 els.search.addEventListener("input", () => { searchTerm = els.search.value.trim().toLowerCase(); if (searchTerm) setView("tasks"); renderAllTasks(); });
 els.form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -371,3 +400,8 @@ setInterval(refreshDateBoundary, 60000);
 const requestedView = location.hash.replace("#", "");
 renderAll();
 setView(document.querySelector(`#view-${requestedView}`) || ["today", "calendar"].includes(requestedView) ? requestedView : "home");
+
+// Warm the existing form while closed; no modal, focus or user data is changed.
+setupButtonMaterial(els.modal);
+DuckPopupMotion.schedulePrepare(els.modal);
+document.fonts?.ready.then(() => DuckPopupMotion.schedulePrepare(els.modal));

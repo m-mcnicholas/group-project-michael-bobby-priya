@@ -74,6 +74,38 @@ button:not(:disabled):active, .interaction-pressed { transform: scale(0.96); fil
 .fur-button-silhouette.fur-static-fallback { color: var(--ink-deep) !important; background: var(--yellow) !important; }
 .fur-button-silhouette.fur-static-fallback > :not(.fur-canvas) { color: inherit !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.material-transition-layer { position:fixed; z-index:35; overflow:hidden; pointer-events:none; contain:layout paint; }
+.material-outgoing,.material-fold-band { position:absolute; inset:0; pointer-events:none; }
+.material-outgoing { overflow:hidden; background:var(--canvas); }
+.material-outgoing .view { animation:none!important; }
+.material-fold-band { mix-blend-mode:multiply; }
+.fur-morph-outgoing { border-radius:0!important; }
+.fur-sheet-canvas { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
+.sheet-example { overflow-anchor:none; min-height:360px;padding:26px;border:1px solid #dfcf9d;border-radius:20px;background:#fff9e8; }
+.sheet-example.destination {background:#ecf5fa;border-color:#c9dce6;}
+.sheet-example-heading {display:flex;justify-content:space-between;align-items:center;gap:14px;}
+.sheet-example-heading h3 {font-size:1.5rem;margin:6px 0 24px;}
+.sheet-example-cards {display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.sheet-example-cards article {padding:24px 18px;border-radius:14px;background:white;border-left:4px solid #ddb546;box-shadow:var(--shadow);}
+.sheet-example.destination .sheet-example-cards {grid-template-columns:1fr;gap:9px;}
+.sheet-example.destination .sheet-example-cards article {padding:12px 18px;display:flex;justify-content:space-between;gap:12px;border-left-color:#538fc5;}
+.sheet-example.destination .sheet-example-cards p {margin:0;}
+@media(max-width:700px){.sheet-example-cards{grid-template-columns:1fr;}.sheet-example-heading{flex-wrap:wrap;}.sheet-example.destination .sheet-example-cards article{display:block;}}
+.wave-lab { margin-top:28px; padding:26px; border:1px solid var(--line);border-radius:24px;background:var(--card); }
+.wave-controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin:24px 0; }
+.wave-controls label { display:grid;gap:8px;font-size:.85rem; }
+.wave-controls input { width:100%; }
+.wave-demo-actions { display:flex; flex-wrap:wrap;gap:24px; margin:26px 0; }
+.wave-demo-actions button { min-width:140px; }
+.wave-demo-shell { display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px; }
+.wave-demo-nav { display:flex;flex-direction:column;gap:22px;padding:16px 8px;background:#fff7d7;border-radius:18px; }
+.wave-demo-workspace { height:300px;overflow:auto;padding:22px;border-radius:18px;background:#fffaf0;border:1px solid var(--line); }
+.wave-demo-days { display:grid;grid-template-columns:repeat(7,1fr);gap:5px; }
+.wave-demo-days span { padding:35px 4px;background:#f8eab5;border-radius:8px;text-align:center; }
+.wave-metrics { display:block;margin-top:20px;font:12px/1.6 ui-monospace,monospace;overflow-wrap:anywhere; }
+@media(max-width:700px) {
+ .wave-demo-shell {grid-template-columns:1fr;}.wave-demo-nav{flex-direction:row;}
+}
 
 .app-shell { position: relative; z-index: 1; display: grid; min-height: 100vh; grid-template-columns: 238px minmax(0, 1fr); }
 .sidebar {
@@ -411,7 +443,7 @@ body.sidebar-open { overflow: hidden; }
 .task-section.is-empty:not(.overdue-section):not(.completed-section) { display: none; }
 .daily-task-list { display: grid; gap: 8px; padding-bottom: 12px; }
 .daily-task-card, .all-task-row { position: relative; display: grid; align-items: center; gap: 7px; border: 1px solid transparent; border-radius: 16px; background: #fffdf8; transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
-.daily-task-card { grid-template-columns: auto 40px minmax(0, 1fr) 40px; min-height: 72px; padding: 8px 7px; box-shadow: inset 3px 0 0 var(--course-color); }
+.daily-task-card { grid-template-columns: auto 40px minmax(0, 1fr) 40px; min-height: 72px; padding: 8px 7px; }
 .daily-task-card:not(:has(.task-time)) { grid-template-columns: 40px minmax(0, 1fr) 40px; }
 .daily-task-card.selected, .all-task-row.selected { border-color: var(--course-color); background: var(--course-soft); box-shadow: 0 0 0 3px color-mix(in srgb, var(--course-color) 18%, transparent); }
 .daily-task-card.completed { opacity: .72; }
@@ -542,4 +574,237 @@ body[data-view="home"] .planner-calendar { min-height: 0; flex: 1; }
   .task-select:hover .task-title { color: #765000; }
   .calendar-date-button:hover, .month-day:hover { background: #fff8df; }
   .calendar-event-block:hover { z-index: 4; filter: brightness(.96); transform: translateY(-1px); }
+}
+
+/* One stable viewport for navigation; destination content scrolls within it. */
+.unified-workspace,body[data-view="home"] .unified-workspace {height:100dvh;min-height:0;max-height:100dvh;overflow:auto;overflow-anchor:none;scrollbar-gutter:stable;}
+.sheet-example {height:420px;min-height:420px;overflow:auto;scrollbar-gutter:stable;}
+@media(max-width:700px){.sheet-example{height:640px;min-height:640px;}}
+.sheet-registration {font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap;max-height:190px;overflow:auto;}
+/* Metrics update without pushing the inspection workspace around. */
+.fur-lab-body {overflow-anchor:none;}
+.fur-lab-body .wave-metrics {height:96px;overflow:auto;}
+@media(max-width:700px){.fur-lab-body .wave-metrics{height:180px;}}
+
+/* Planner glass controls. Fur stays in the dedicated labs, not the planner. */
+.planner-glass .glass-button {
+  --glass-tint: rgba(255,255,255,.4);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--ink-deep);
+  border: 1px solid rgba(255,255,255,.92);
+  background: linear-gradient(160deg,rgba(255,255,255,.7),rgba(255,255,255,.12) 52%,rgba(255,255,255,.3)), var(--glass-tint);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.98), inset 0 -1px 0 rgba(142,111,41,.12), 0 4px 12px rgba(74,52,10,.09);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
+  backdrop-filter: blur(12px) saturate(135%);
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, filter 140ms ease;
+}
+.planner-glass .drawer-close.glass-button { position: absolute; }
+.planner-glass :is(.primary-button,.dark-button,#plan-selected-date).glass-button { --glass-tint: rgba(248,201,67,.72); border-color: rgba(204,157,24,.5); }
+.planner-glass .danger-button.glass-button { --glass-tint: rgba(255,224,215,.72); color: #872e21; }
+.planner-glass :is(.nav-item.active,[aria-pressed="true"],.filter-chip.active).glass-button { --glass-tint: rgba(255,224,116,.7); border-color: rgba(188,139,9,.42); }
+.planner-glass .glass-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--glass-x,50%) var(--glass-y,50%),rgba(255,255,255,.85),rgba(255,255,255,.12) 50%,transparent 75%);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover:hover) {
+  .planner-glass .glass-button:not(:disabled):not([aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.035);
+    border-color: rgba(255,255,255,1);
+    box-shadow: inset 0 1px 0 white, inset 0 -1px 0 rgba(142,111,41,.1), 0 7px 18px rgba(74,52,10,.14);
+  }
+}
+.planner-glass .glass-button:not(:disabled):not([aria-disabled="true"]):is(:active,.interaction-pressed) {
+  transform: scale(.975);
+  filter: brightness(.96);
+  box-shadow: inset 0 2px 5px rgba(74,52,10,.16), 0 1px 4px rgba(74,52,10,.08);
+  transition-duration: 65ms;
+}
+.planner-glass .glass-button.interaction-pressed::after { opacity: .45; }
+.planner-glass .glass-button.interaction-released:not(:disabled):not([aria-disabled="true"]) { animation: glass-release 360ms ease-out; }
+.planner-glass .glass-button.interaction-released:not(:disabled):not([aria-disabled="true"])::after { animation: glass-light-release 360ms ease-out; }
+@keyframes glass-release { from { transform: scale(.975); } 55% { transform: scale(1.012); } to { transform: none; } }
+@keyframes glass-light-release { from { opacity: .65; } to { opacity: 0; } }
+.planner-glass .glass-button:focus-visible { outline: 3px solid #8c5b00; outline-offset: 3px; }
+.planner-glass .glass-button:is(:disabled,[aria-disabled="true"]) { opacity: .45; filter: none; transform: none; animation: none; cursor: not-allowed; }
+.planner-glass .glass-button:is(:disabled,[aria-disabled="true"])::after { display: none; }
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .planner-glass .glass-button { background-color: #fff9e6; }
+}
+@media (prefers-reduced-transparency:reduce), (prefers-contrast:more) {
+  .planner-glass .glass-button { background: #fffdf7; -webkit-backdrop-filter:none; backdrop-filter:none; border-color:#aa9567; }
+  .planner-glass :is(.primary-button,.dark-button,.nav-item.active,[aria-pressed="true"]).glass-button { background: #f8d568; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .planner-glass .glass-button:not(:disabled):is(:hover,:active,.interaction-pressed,.interaction-released) { transform:none !important; animation:none !important; }
+  .planner-glass .glass-button.interaction-released::after { animation:none !important; opacity:.32; }
+}
+@media (forced-colors:active) {
+  .planner-glass .glass-button { color:ButtonText; background:ButtonFace; border:1px solid ButtonText; box-shadow:none; text-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .planner-glass .glass-button::after { display:none; }
+}
+
+/* Only popout dialogs expand from their launcher; the sidebar keeps its slide. */
+.planner-glass .task-modal { transform-origin: center; }
+.planner-glass .view { animation: none; }
+.planner-glass .task-modal[data-popup-motion="opening"]::backdrop { animation: popup-backdrop-in 320ms ease-out both; }
+.planner-glass .task-modal[data-popup-motion="closing"]::backdrop { animation: popup-backdrop-out 220ms ease-in both; }
+@keyframes popup-backdrop-in { from { opacity:0; } to { opacity:1; } }
+@keyframes popup-backdrop-out { from { opacity:1; } to { opacity:0; } }
+
+/* Navigation and content share one layout plane: reveal a track, reflow content. */
+.planner-glass .unified-shell {
+  --sidebar-width: 250px;
+  display: grid;
+  grid-template-columns: 0px minmax(0,1fr);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  transition: grid-template-columns 220ms cubic-bezier(.2,.8,.2,1);
+}
+.planner-glass.sidebar-open .unified-shell { grid-template-columns: var(--sidebar-width) minmax(0,1fr); }
+.planner-glass .unified-shell .sidebar {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  top: auto;
+  bottom: auto;
+  width: var(--sidebar-width);
+  min-width: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  z-index: 1;
+  transform: translateX(-100%);
+  box-shadow: none;
+}
+.planner-glass.sidebar-open .unified-shell .sidebar { transform: translateX(0); }
+.planner-glass .unified-workspace {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: none;
+  container: planner / inline-size;
+}
+.planner-glass .sidebar-scrim { display: none; }
+.planner-glass[data-view="home"] .planner-workspace { grid-template-columns: minmax(300px,.76fr) minmax(0,1.24fr); }
+@container planner (max-width: 900px) {
+  .planner-glass[data-view="home"] #view-home, .planner-glass[data-view="home"] .planner-workspace { height: auto; }
+  .planner-glass[data-view="home"] .planner-workspace { grid-template-columns: minmax(0,1fr); }
+  .planner-glass[data-view="home"] .daily-panel { height: auto; min-height: min(760px,calc(100dvh - 24px)); }
+  .planner-glass[data-view="home"] .unified-calendar-panel { height: auto; min-height: 820px; }
+}
+@container planner (max-width: 700px) {
+  .compact-topbar { flex-wrap: wrap; gap: 12px; }
+  .topbar-actions { width: 100%; min-width: 0; flex-wrap: wrap; }
+  .search-box { min-width: 0; flex: 1; }
+  .class-grid { grid-template-columns: minmax(0,1fr); }
+  .panel-heading { flex-wrap: wrap; }
+}
+@media (max-width:650px) {
+  .planner-glass .unified-shell { --sidebar-width: 76px; }
+  .planner-glass .unified-shell .sidebar { padding: 16px 6px; }
+  .planner-glass .unified-shell .brand { margin: 0 auto 14px; gap: 0; }
+  .planner-glass .unified-shell .brand > span:last-child { display: none; }
+  .planner-glass .drawer-close.glass-button { position: static; flex-shrink: 0; min-height: 44px; width: 44px; margin: 0 auto 14px; }
+  .planner-glass .unified-shell .nav-item { grid-template-columns: minmax(0,1fr); justify-items: center; gap: 4px; padding: 9px 3px; font-size: .6rem; text-align: center; }
+  .planner-glass .unified-shell .nav-count { position: absolute; right: 0; top: 0; min-width: 14px; padding: 1px 3px; font-size: .55rem; }
+  .planner-glass .unified-shell :is(.sync-card,.profile-card) { display: none; }
+  .planner-glass.sidebar-open .unified-workspace { padding-right: 8px; padding-left: 8px; }
+  .planner-glass.sidebar-open .daily-panel > .panel-heading { grid-template-columns: minmax(0,1fr) auto; }
+  .planner-glass.sidebar-open .home-nav-open-button { display: none; }
+}
+.planner-glass.sidebar-open .nav-open-button { display: none; }
+
+/* One gently damped response for the planner; no oscillation or layout overshoot. */
+:root { --motion-ease: cubic-bezier(.2,.8,.2,1); --motion-layout:480ms; --motion-control:240ms; --motion-press:80ms; --motion-release:400ms; --motion-popupOpen:240ms; --motion-popupClose:300ms; }
+.planner-glass :is(button,a.secondary-button,.switch span,.text-button > span,.progress-track span,.toast,.daily-task-card,.all-task-row) {
+  transition-timing-function: var(--motion-ease);
+  transition-duration: var(--motion-control);
+}
+.planner-glass .unified-shell,
+.planner-glass .unified-shell .sidebar { transition-duration:var(--motion-layout); transition-timing-function:var(--motion-ease); }
+.planner-glass .sidebar-toggle-dock {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 12;
+  pointer-events: none;
+  transition: left var(--motion-layout) var(--motion-ease);
+}
+.planner-glass.sidebar-open .sidebar-toggle-dock { left: calc(var(--sidebar-width) - 14px); }
+.planner-glass .sidebar-edge-toggle.glass-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  min-height: 64px;
+  padding: 0;
+  border-radius: 0 14px 14px 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.planner-glass.sidebar-open .sidebar-edge-toggle.glass-button { border-radius: 14px; }
+.planner-glass .sidebar-edge-toggle::before { content:"";position:absolute;inset:0 -8px;pointer-events:auto; }
+.planner-glass .glass-button:not(:disabled):not([aria-disabled="true"]):is(:active,.interaction-pressed) { transition-duration:var(--motion-press); }
+.planner-glass .interaction-released:not(.fur-material):not(.glass-button) { animation: control-settle var(--motion-release) var(--motion-ease); }
+.planner-glass .glass-button.interaction-released:not(:disabled):not([aria-disabled="true"]) { animation:glass-settle var(--motion-release) var(--motion-ease); }
+.planner-glass .glass-button.interaction-released:not(:disabled):not([aria-disabled="true"])::after { animation:glass-light-release var(--motion-release) var(--motion-ease); }
+@keyframes control-settle { from { transform:scale(.96); filter:brightness(.93); } to { transform:none; filter:none; } }
+@keyframes glass-settle { from { transform:scale(.975); } to { transform:none; } }
+.planner-glass .task-modal[data-popup-motion="opening"]::backdrop { animation:popup-backdrop-in var(--motion-popupOpen) var(--motion-ease) both; }
+.planner-glass .task-modal[data-popup-motion="closing"]::backdrop { animation:popup-backdrop-out var(--motion-popupClose) var(--motion-ease) both; }
+/* Navigation has its own edge handle, so headings no longer reserve a toggle slot. */
+.planner-glass[data-view="home"] .daily-panel > .panel-heading { grid-template-columns:minmax(0,1fr) auto; }
+@media (prefers-reduced-motion:reduce) {
+  .planner-glass .interaction-released:not(.fur-material),
+  .planner-glass .glass-button:not(:disabled):is(:hover,:active,.interaction-pressed,.interaction-released) { animation:none!important; transform:none!important; }
+  .planner-glass .glass-button.interaction-released::after { animation:none!important; opacity:.32; }
+}
+/* Extend the handle's transparent hit area without widening its visible tab. */
+.planner-glass .sidebar-edge-toggle.glass-button { overflow: visible; }
+.planner-glass .sidebar-edge-toggle::before { inset:0 -16px; }
+/* The destination uses the launcher's glass recipe, rather than an unrelated tint. */
+.planner-glass .task-modal form {
+  z-index: 1;
+  background-color: var(--popup-tint,rgba(248,201,67,.72));
+  background-image: var(--popup-sheen,linear-gradient(160deg,rgba(255,255,255,.7),rgba(255,255,255,.12) 52%,rgba(255,255,255,.3)));
+}
+.planner-glass .task-modal form::before { background: none; }
+.popup-morph-surface { font-family: inherit; }
+
+/* Use the same bounds for native modal, warm layout and the reserved shell.
+   Override the UA modal limits, which otherwise silently clamp by an extra 6–10px. */
+.planner-glass .task-modal { max-width:calc(100% - 28px); max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); }
+/* Warm only a closed form: it remains invisible, non-modal and outside input. */
+.planner-glass .task-modal[data-popup-preparing] {
+  display:block; position:fixed; inset:0; margin:auto; height:fit-content;
+  visibility:hidden; pointer-events:none;
+}
+/* Reserve one final frame; the native form scrolls within it without resizing. */
+.planner-glass .task-modal[data-popup-staged] form { height:100%; max-height:100%; }
+.planner-glass .task-modal[data-popup-stage="shell"] form { display:none; }
+/* Fade only unblurred dimming during travel; glass returns at settled bounds. */
+.planner-glass .task-modal[data-popup-staged]::backdrop { animation:none; }
+.planner-glass .task-modal[data-popup-stage="shell"]::backdrop {
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+.popup-morph-source, .popup-morph-label { font-family:inherit; }
+
+.planner-glass .task-modal[data-popup-stage="shell"][data-popup-motion="opening"]::backdrop {
+  animation:popup-backdrop-in var(--motion-popupOpen) var(--motion-ease) both;
+}
+.planner-glass .task-modal[data-popup-stage="shell"][data-popup-motion="closing"]::backdrop {
+  animation:popup-backdrop-out calc(var(--motion-popupClose) - var(--motion-popupContentOut,60ms)) var(--motion-ease) both;
 }
