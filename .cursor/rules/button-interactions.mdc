@@ -14,10 +14,8 @@ alwaysApply: true
   2. **Press:** immediate feedback while pointer, touch, Space, or Enter is held down.
   3. **Release:** a brief, visible response after the press is released; this must be more than simply removing the pressed style.
 - Match the effect to the material. Standard controls may lift, compress, tint, or rebound; fur controls must use localized brushing/compression and visible strand recovery rather than moving the whole control.
-- Only popout windows/dialogs should expand from their launcher and close back toward the saved launcher position. Keep the sidebar sliding in/out in the same layout plane: it must take space and reframe the usable main panel, without overlay, dimming, blur or making content inert. Do not scale page or calendar navigation. Preserve focus, Escape, interruption cleanup and reduced motion.
-- Popout identity must continue its launcher: inherit its tint/material and action wording. Expand a lightweight shell/title from the launcher, then reveal native fields after shell geometry settles; reverse on close. Keep material coverage continuous when fixed source/window corner shapes cross over. Hide the duplicate launcher only during active motion.
-- Prepare the existing closed form layout during idle time without opening it, painting it, changing values or moving focus. Reserve stable final bounds before showing the shell; an early uncached click uses a bounded scrollable frame and must not synchronously measure the hidden form.
-- Animate only transforms/opacity during shell movement; keep each layer's corners/shadow fixed, omit moving backdrop blur, and keep the native fields out of rendered layout until the shell settles. Reveal fields at fixed bounds; preserve immediate Escape/backdrop dismissal, interruption cleanup and deferred field focus. Do not run expensive preparation behind an active moving shell.
+- Follow [Button-launched popout motion](popout-motion.mdc) for dialog launchers.
+- Keep the sidebar in the workspace layout plane so opening it makes room and reframes the main panel without an overlay or making the workspace inert.
 - Keep the sidebar toggle on the outer edge/seam, accessible when closed and open, rather than inside a page heading.
 - All animated planner movement must use the shared damped response/timing tokens in `landing/motion-tokens.js`; settle without repeated bounce or overshoot. Preserve fast press feedback and reduced-motion bypass.
 - Interaction effects must not shift surrounding layout or reduce label readability.

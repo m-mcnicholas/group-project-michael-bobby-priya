@@ -1,0 +1,13 @@
+---
+description: Keep button-launched popout motion continuous and reversible.
+alwaysApply: true
+---
+
+# Button-launched popout motion
+
+- Start the popout shell at the launcher’s visible bounds. Carry its tint, material, and action wording into the window. For example, a yellow **Add task** button expands into a yellow-tinted **Add task** dialog.
+- Reserve stable window bounds before motion. Move the lightweight shell and title first, then reveal native fields once the shell settles. Prepare the closed layout during idle time without painting it or changing focus or values. Use a bounded, scrollable fallback on a cold open.
+- Use the same geometry in both directions. Close by fading the fields at fixed bounds, then running the opening transforms in reverse order so the shell returns directly to the launcher. Keep corners rounded throughout and match the button’s bounds at handoff. Check intermediate frames for a dip, bounce, or size snap.
+- Use the shared damped motion tokens. Animate transforms and opacity during travel, and apply backdrop blur only after the shell settles. Hide the duplicate launcher during travel and restore it before returning focus.
+- Preserve native dialog semantics, Escape and backdrop dismissal, and reduced motion. If closing interrupts opening, start from the current visible pose and clean up temporary layers when motion ends.
+- Apply this motion to button-launched popouts. Sidebars slide and reflow the workspace, and page and calendar navigation retain their own behavior.

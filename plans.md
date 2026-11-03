@@ -5,6 +5,7 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
 ### Project Rules
  - Follow `.cursor/rules/button-interactions.mdc` for every button and button-like control across the project.
  - Follow `.cursor/rules/local-first-release.mdc` for all website work: review changes locally and obtain explicit approval before any public deployment.
+ - Follow [.cursor/rules/popout-motion.mdc](.cursor/rules/popout-motion.mdc) for button-launched dialogs.
 ## Ideation
  - ~~flashcard app~~
  - [x] digital planner linked with Axis
@@ -202,3 +203,5 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
  - 2026-10-28: Added a **Backend Plan** section: Supabase dev/prod projects with migrations in `supabase/`; schema for profiles, classes, items (local-date deadlines, client-generated UUIDs, soft deletes), private Axis connections, sync runs, and reminders; row-level security; a `planner-store.js` data layer for the current static site with a localStorage fallback and a local-task import; and phased owners. Inspected a real Axis iCal feed to define the Axis sync design (all-day items, class taken from the title prefix, GUID UIDs, no completion or grade data) and answered the iCal part of the Axis open question. No feed link or feed data was committed. Removed a leftover test line from Procedures. Documentation only; no public deployment was made.
 
  - 2026-11-02: Prepared the reviewed Duck-Plan-Test planner (34d91f8) for promotion on top of the shared main branch (c05ee60). The planner uses lightweight glass controls, a docked sidebar, and shell-first task dialogs that retrace the opening path on close. Kept the backend plan and existing shared fur lab; experimental fur changes remain in Duck-Plan-Test. Submitted through the shared pull-request workflow. No public deployment was made.
+
+ - 2026-11-02: Recorded the button-launched popout design rule. The shell inherits the launcher’s appearance, reveals fields after settling, and retraces the opening geometry on close. Linked the rule from the project instructions and button guidance.
