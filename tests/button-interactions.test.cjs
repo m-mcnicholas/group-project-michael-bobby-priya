@@ -1,0 +1,6 @@
+const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+test('keyboard release follows the original launcher after opening moves focus',()=>{
+  const events={},timers=[];class Element{constructor(){this.classes=new Set(['glass-button']);this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x),contains:x=>this.classes.has(x)};this.style={removeProperty(){}};}closest(){return this;}matches(){return false;}getAttribute(){return null;}}
+  const ctx={Element,document:{addEventListener:(name,fn)=>events[name]=fn,querySelectorAll:()=>[]},window:{DuckMotion:{duration:{release:400}},addEventListener(){}},setTimeout:(fn,ms)=>(timers.push({fn,ms}),timers.length),clearTimeout(){}};
+  vm.runInNewContext(fs.readFileSync('landing/button-interactions.js','utf8'),ctx);const launcher=new Element(),newFocus=new Element();events.keydown({target:launcher,key:'Enter',repeat:false});assert(launcher.classes.has('interaction-pressed'));events.keyup({target:newFocus,key:'Enter'});assert(!launcher.classes.has('interaction-pressed'));assert(launcher.classes.has('interaction-released'));assert(!newFocus.classes.has('interaction-released'));assert.equal(timers[0].ms,400);timers[0].fn();assert(!launcher.classes.has('interaction-released'));
+});
