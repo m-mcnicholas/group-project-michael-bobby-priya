@@ -41,7 +41,7 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
  - **Language**: TypeScript
  - **App (web + iOS + Android)**: React Native with Expo (Expo Router, react-native-web for the web build)
  - **Desktop (macOS / Windows / Linux)**: wrap the web build with Tauri or Electron
- - **Backend / database / auth**: Supabase (Postgres, auth, row-level security) or Firebase
+ - **Backend / database / auth**: not chosen yet; the site currently stores everything in the browser
  - **Axis integration**: server-side function that talks to Axis so credentials/tokens never live in the client
  - **Version control**: GitHub, feature branches + pull requests, at least one teammate reviews each PR
 
@@ -56,8 +56,7 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
     - We know that it offers iCal, we are not sure if it has an API
     - Answered for iCal (2026-10-28): each student has a private Blackbaud "Podium" feed link (`https://` or `webcal://<school>.myschoolapp.com/podium/feed/iCal.aspx?z=...`). See **Backend Plan → Axis sync** for what it contains. Still unknown: whether item UIDs stay stable across downloads.
  - If there is no API: fall back to an iCal feed import or manual entry until access is figured out.
- - Supabase or Firebase?
-  - Supabase
+ - Which backend / database / auth service? (reopened 2026-11-04)
  - Tauri or Electron for desktop (or skip desktop until later)?
   -Electron
 
@@ -89,39 +88,32 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
  - **Everyone**: testing, code review, updating this file
 
 ### Backend Plan
-**Approach:** build the Supabase backend now, behind the current static `landing/` site (load `supabase-js` from a CDN), instead of waiting for the Expo rewrite. The schema, row-level security, and server functions carry over to Expo unchanged; only the UI gets rewritten.
+**Status (2026-11-04):** no backend is chosen. The static `landing/` site keeps all planner data in `localStorage` through `landing/planner-store.js`. The schema, Axis findings, and store design below still apply to whichever backend we pick.
 
 **Repo layout**
- - `supabase/migrations/`: SQL schema files, tracked in git
- - `supabase/functions/axis-sync/`: Edge Function (Deno) that runs the Axis sync
- - `supabase/seed.sql`: the current demo classes and tasks as sample data
  - `landing/planner-store.js`: the only file that reads or writes planner data
  - `landing/ical-parser.js`: pure parser code, tested with `node --test` like `planner-model.js`
- - Two Supabase projects, **dev** and **prod**. Under the local-first-release rule, applying a migration to prod counts as a deployment and needs explicit approval.
+ - Once a backend exists, it gets dev and prod environments. Under the local-first-release rule, changing prod counts as a deployment and needs explicit approval.
 
 **Schema** (refines the draft data model above)
- - `profiles`: `id` (= `auth.users.id`), `display_name`, `time_zone`, `settings jsonb`. The time zone lets the server work out exact reminder times.
+ - `profiles`: `id` (the user's account id), `display_name`, `time_zone`, `settings`. The time zone lets the server work out exact reminder times.
  - `classes`: `id uuid`, `user_id`, `name`, `teacher`, `period`, `color`, `code`, `axis_key`, `archived`. Unique on (`user_id`, `axis_key`).
  - `items`: `id uuid`, `user_id`, `class_id` (optional), `type` (assignment / test / task / event), `title`, `notes`, `priority`, `due_date date`, `due_time time`, `scheduled_start timestamp`, `duration_minutes`, `completed`, `completed_at`, `source` (manual / axis), `axis_uid`, `axis_missing`, `updated_at`, `deleted_at`. Unique on (`user_id`, `axis_uid`), so re-syncs never create duplicates.
- - `axis_connections`: `user_id`, `ical_url`, `last_synced_at`, `last_error`. The browser can't read this table; only the sync function can, because the feed link works like a password.
+ - `axis_connections`: `user_id`, `ical_url`, `last_synced_at`, `last_error`. The browser must never read this table; only the sync job can, because the feed link works like a password.
  - `sync_runs`: `id`, `user_id`, `started_at`, `status`, `added`, `updated`, `removed`. A log for debugging.
- - `reminders`: `id`, `item_id`, `offset_minutes`, `fire_at timestamptz`, `sent_at`. The table is created now; delivery comes in Phase 3.
+ - `reminders`: `id`, `item_id`, `offset_minutes`, `fire_at`, `sent_at`.
 
 **Schema rules**
  - Deadlines are plain local calendar values (`date` + `time`), matching `toDateKey` in `planner-model.js`. Don't store them as time-zone timestamps.
  - The client generates ids with `crypto.randomUUID()`, so the UI can update instantly and offline mode stays possible later.
  - Delete by setting `deleted_at` instead of removing rows, so deletions reach every device.
  - Axis only overwrites the fields it owns (title, due date, class, notes). It never touches `completed`, `scheduled_start`, or `priority`.
-
-**Auth and security**
- - Supabase Auth: Google sign-in if the school uses Google accounts, with email magic links as the fallback. A trigger creates each user's `profiles` row on sign-up.
- - Row-level security on every table with `user_id = auth.uid()`. This is what makes the public anon key safe to ship. Add a test that confirms user A can't read user B's rows.
+ - Every user can only read and change their own rows. Add a test that confirms user A can't read user B's rows.
 
 **`planner-store.js`**
  - Functions: `listItems(range)`, `upsertItem`, `deleteItem`, `toggleComplete`, `listClasses`, `upsertClass`, `subscribe(onChange)`.
- - `app.js` calls these instead of using `localStorage` and `CLASS_INFO` directly. When nobody is signed in, the store falls back to `localStorage` so the demo keeps working.
- - On first sign-in, offer to import local tasks: create `classes` rows from `CLASS_INFO`, map each task's `className` to the new `class_id`, and keep the `migrateTasks` rule of never inventing a schedule from an old due time.
- - Supabase Realtime on `items` and `classes` keeps devices in sync.
+ - `app.js` calls these instead of using `localStorage` directly. A future cloud mode should keep the same functions so `app.js` doesn't change, with `localStorage` as the signed-out fallback.
+ - When accounts exist, offer to import local tasks on first sign-in, keeping the `migrateTasks` rule of never inventing a schedule from an old due time.
 
 **Axis sync** (based on a real feed, 2026-10-28)
  - The feed: about 300 VEVENTs covering a rolling window of roughly the past and current semester. Every item is **all-day** (`DTSTART;VALUE=DATE`) with no due time. Each UID is a GUID, and no UID repeats.
@@ -133,19 +125,13 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
    - `UID` becomes `axis_uid`
    - `DTSTART` becomes `due_date`, and `due_time` stays empty
    - `type` is `test` when the title contains quiz, test, or exam, and `assignment` otherwise
- - Connecting: the student pastes either the `https://` or `webcal://` link; the app switches `webcal://` to `https://`. The function only fetches links whose host ends in `.myschoolapp.com` and whose path is `/podium/feed/iCal.aspx`, so it can't be used to fetch arbitrary URLs.
- - Re-syncing: the `axis-sync` function adds or updates classes and items by `axis_key` / `axis_uid`, and writes a `sync_runs` row. An item that drops out of the feed gets `axis_missing = true` instead of being deleted (the window rolls), and completed items are never touched. Run it every few hours with `pg_cron` + `pg_net`, plus a "Sync now" button. The existing `#connect-axis` and `#sync-info` buttons become real.
+ - Connecting: the student pastes either the `https://` or `webcal://` link; the app switches `webcal://` to `https://`. The server only fetches links whose host ends in `.myschoolapp.com` and whose path is `/podium/feed/iCal.aspx`, so it can't be used to fetch arbitrary URLs. Browsers can't fetch the feed directly, so this needs a server-side job.
+ - Re-syncing: add or update classes and items by `axis_key` / `axis_uid` (`planAxisSync` in `ical-parser.js` already plans this), and write a `sync_runs` row. An item that drops out of the feed gets `axis_missing = true` instead of being deleted (the window rolls), and completed items are never touched. Run it every few hours, plus a "Sync now" button (`#sync-info`).
  - Testing: use a small **made-up** fixture `.ics` that copies the real structure (folded lines, entities, colons in titles, dashes in course names). **Never commit a real feed or feed link**, because both contain personal data.
  - Before relying on UIDs to prevent duplicates, download a feed twice, a day or more apart, and confirm the UIDs match.
 
-**Backend phases and owners**
- - **Phase 0**: create the dev and prod Supabase projects and `supabase/`; first migration (schema, row-level security, profile trigger); seed data. *(Michael)*
- - **Phase 1**: auth, `planner-store.js`, switching `app.js` over to it, importing local tasks, realtime sync, class editing. *(Michael: data layer; Priya: sign-in and class screens)*
- - **Phase 2**: `ical-parser.js` with tests, the `axis-sync` function, scheduled re-sync, sync status in the UI. *(Bobby)*
- - **Phase 3**: reminders (`fire_at` from `profiles.time_zone`, delivered by web push and later Expo push), searching items in the database. *(Michael and Bobby)*
- - **Stretch**: offline queue (enabled by client ids, `updated_at`, and soft deletes), recurring items, subtasks (`parent_id`).
-
 **Still open**
+ - Which backend, database, and auth service to use.
  - Are Axis UIDs stable across downloads?
  - Does the school use Google accounts? That decides the sign-in method.
 
@@ -201,3 +187,4 @@ Use the plans.md file as agents.md. This project is collaborative, so ALWAYS pul
 
  - 2026-10-28: Added a **Backend Plan** section: Supabase dev/prod projects with migrations in `supabase/`; schema for profiles, classes, items (local-date deadlines, client-generated UUIDs, soft deletes), private Axis connections, sync runs, and reminders; row-level security; a `planner-store.js` data layer for the current static site with a localStorage fallback and a local-task import; and phased owners. Inspected a real Axis iCal feed to define the Axis sync design (all-day items, class taken from the title prefix, GUID UIDs, no completion or grade data) and answered the iCal part of the Axis open question. No feed link or feed data was committed. Removed a leftover test line from Procedures. Documentation only; no public deployment was made.
  - 2026-10-30: Implemented the Backend Plan in code (Phases 0–2) on branch `worktree-backend-impl`. **Phase 0:** `supabase/` with `config.toml`, the initial migration (profiles, classes, items with local-date deadlines and soft deletes, private `axis_connections`, `sync_runs`, `reminders`; row-level security on every table; an item can only point at its owner's class; profile-on-sign-up trigger; `axis_connection_status()`/`disconnect_axis()` RPCs; Realtime publication), a separate pg_cron + pg_net migration that re-syncs Axis every 4 hours, `seed.sql` with the demo classes and tasks, and `supabase/tests/rls.test.sql` proving user A can't read or change user B's rows or read any feed link. **Phase 1:** `landing/planner-store.js` is now the only data layer: optimistic writes, Supabase when signed in (magic link or Google, PKCE), Realtime sync, soft deletes, a localStorage fallback that migrates old `className` tasks, and a one-time offer to import local tasks on first sign-in. `app.js` uses it everywhere; classes are id-based and editable (add, edit, archive), and Settings has Account and Axis rows. **Phase 2:** `landing/ical-parser.js` (unfolding, entity decoding, first-colon title split, section suffix, quiz/test/exam typing, feed-link allowlist, re-sync planner that never touches completed or deleted items and flags dropped items as `axis_missing`), tested against a made-up fixture, plus the `axis-sync` Edge Function (connect, Sync now with a 1-minute limit, cron sync-all; no redirects followed). Phase 3 reminder delivery is not started. Checks: 39 Node tests pass; the migration, seed, and RLS test pass on a real Postgres (PGlite, because Docker's disk was full); the Edge Function passes `deno check`; a headless-Chrome run of the local preview passed 32 checks across local mode, signed-in mode with a mocked Supabase client, and 390 px width, with no console errors. **No hosted Supabase projects were created and nothing was deployed;** `landing/supabase-config.js` is empty, so the site behaves as before until dev/prod are set up per `supabase/README.md`. Still open: confirm Axis UIDs are stable across downloads and whether the school uses Google accounts.
+ - 2026-11-04: Removed the Supabase integration on branch `worktree-remove-supabase`: deleted `supabase/` (migrations, seed, RLS tests, `axis-sync` Edge Function) and `landing/supabase-config.js`; `planner-store.js` is now local-only (`localStorage`), with the same `listItems`/`upsertItem`/`toggleComplete`/`deleteItem`/`upsertClass`/`subscribe` API; Settings dropped the Account section and the Axis row now says sync isn't available yet. `ical-parser.js` and its tests stay for a future backend. The Backend Plan above is now backend-agnostic and the backend choice is reopened. Checks: all Node tests pass. No public deployment was made.

@@ -3,7 +3,6 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.DuckAxisIcal = api;
 })(typeof window !== "undefined" ? window : globalThis, function buildAxisIcal() {
-  // Keep supabase/functions/axis-sync/ical-parser.js byte-identical to this file (a test checks it).
   const CLASS_COLORS = ["#538fc5", "#d96f63", "#7d6fbd", "#3e946d", "#c48b34", "#c4568f", "#2f8f9d", "#8a7a3a", "#5b6fd6", "#b8613a"];
   const NAMED_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " " };
 

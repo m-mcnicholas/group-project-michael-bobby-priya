@@ -112,9 +112,3 @@ test("an item that returns to the feed clears its missing flag", () => {
   const plan = Ical.planAxisSync({ feed, existingClasses: first.classInserts, existingItems, newId: counterIds() });
   assert.deepEqual(plan.itemUpdates.map((row) => [row.id, row.axis_missing]), [[existingItems[3].id, false]]);
 });
-
-test("the Edge Function's copy of the parser matches landing/ical-parser.js", () => {
-  const source = fs.readFileSync(path.join(__dirname, "../landing/ical-parser.js"), "utf8");
-  const copy = fs.readFileSync(path.join(__dirname, "../supabase/functions/axis-sync/ical-parser.js"), "utf8");
-  assert.equal(copy, source);
-});

@@ -20,7 +20,7 @@
           <button class="nav-item" type="button" data-view="classes"><span class="nav-icon" aria-hidden="true">◫</span><span>Classes</span></button>
           <button class="nav-item" type="button" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></button>
         </nav>
-        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Not signed in</p></div><button type="button" id="sync-info" aria-label="Set up Axis sync">↻</button></section>
+        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Not connected</p></div><button type="button" id="sync-info" aria-label="Set up Axis sync">↻</button></section>
         <div class="sidebar-spacer"></div>
         <button class="profile-card" type="button" data-go="settings" aria-label="Open Bobby's settings"><span class="avatar" aria-hidden="true">BZ</span><span><strong>Bobby</strong><small>Student account</small></span><span aria-hidden="true">›</span></button>
       </aside>
@@ -71,11 +71,10 @@
         </section></section>
         <section class="view" id="view-classes" data-page-title="Classes" data-eyebrow="Keep every class sorted"><div class="classes-toolbar"><button type="button" class="secondary-button" id="add-class">＋ Add class</button></div><div class="class-grid" id="class-grid"></div></section>
         <section class="view" id="view-settings" data-page-title="Settings" data-eyebrow="Make DuckPlan yours"><section class="panel settings-panel">
-          <div id="account-settings" class="settings-group"></div>
-          <div id="axis-settings" class="settings-group"></div>
+          <div class="settings-row"><div><h2>Axis connection</h2><p>Importing classes and assignments from your Axis calendar isn't available yet. Your tasks are saved in this browser.</p></div></div>
           <div class="settings-row"><div><h2>Reminders</h2><p>Get a nudge before important assignments are due.</p></div><label class="switch"><input type="checkbox" checked /><span></span><span class="sr-only">Enable reminders</span></label></div>
           <div class="settings-row"><div><h2>Interactive fur lab</h2><p>Inspect DuckPlan's approved procedural duck-down material.</p></div><a class="secondary-button" href="./fur-lab.html">Open material lab</a></div>
-          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset the tasks saved in this browser without affecting any account.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
+          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset the tasks and classes saved in this browser.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
         </section></section>
       </main>
     </div>
@@ -96,6 +95,6 @@
       <div class="modal-actions"><button class="danger-button" type="button" id="archive-class" hidden>Archive</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-class">Cancel</button><button class="primary-button" type="submit">Save class</button></div>
     </form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./planner-model.js"></script><script src="./ical-parser.js"></script><script src="./supabase-config.js"></script><script src="./planner-store.js?v=20261030-backend-1"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261030-backend-1"></script>
+    <script src="./planner-model.js"></script><script src="./ical-parser.js"></script><script src="./planner-store.js?v=20261104-local-1"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261104-local-1"></script>
   </body>
 </html>

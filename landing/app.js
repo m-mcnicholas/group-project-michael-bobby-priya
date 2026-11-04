@@ -22,7 +22,6 @@ const defaultTasks = () => [
 
 const store = window.DuckPlannerStore.createPlannerStore({
   storage: localStorage, model: Model, defaultClasses: () => DEFAULT_CLASSES, defaultTasks,
-  config: window.DUCKPLAN_SUPABASE || {}, redirectTo: `${location.origin}${location.pathname}`,
 });
 let tasks = [];
 let selectedDate = nowKey();
@@ -32,8 +31,6 @@ let searchTerm = "";
 let selectedTaskId = null;
 let editingTaskId = null;
 let editingClassId = null;
-let axisStatus = { connected: false, lastSyncedAt: null, lastError: null };
-let localImportCount = 0;
 let collapsed = { overdue: false, completed: false };
 let toastTimer;
 let observedToday = nowKey();
@@ -51,8 +48,7 @@ const els = {
   saveTask: document.querySelector("#save-task"), toast: document.querySelector("#toast"),
   classModal: document.querySelector("#class-modal"), classForm: document.querySelector("#class-form"),
   classModalTitle: document.querySelector("#class-modal-title"), archiveClass: document.querySelector("#archive-class"),
-  accountSettings: document.querySelector("#account-settings"), axisSettings: document.querySelector("#axis-settings"),
-  syncCopy: document.querySelector(".sync-copy"), syncInfo: document.querySelector("#sync-info"), resetDemo: document.querySelector("#reset-demo"),
+  syncInfo: document.querySelector("#sync-info"), resetDemo: document.querySelector("#reset-demo"),
   selectedDayLabel: document.querySelector("#selected-day-label"), selectedDateHeading: document.querySelector("#selected-date-heading"),
   dailyProgressCopy: document.querySelector("#daily-progress-copy"), completionPercent: document.querySelector("#completion-percent"),
   completionRing: document.querySelector("#completion-ring"), dailyEmpty: document.querySelector("#daily-empty"),
@@ -183,43 +179,6 @@ function renderClassOptions() {
   const current = select.value;
   select.innerHTML = `${store.listClasses().map((info) => `<option value="${info.id}">${safeText(info.name)}</option>`).join("")}<option value="">No class</option>`;
   select.value = current;
-}
-
-function relativeSyncTime(value) {
-  if (!value) return "Not synced yet";
-  const minutes = Math.round((Date.now() - Date.parse(value)) / 60000);
-  if (minutes < 1) return "Synced just now";
-  if (minutes < 60) return `Synced ${minutes} min ago`;
-  return `Synced ${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value))}`;
-}
-function replaceSettings(container, markup) {
-  if (window.DuckFur) container.querySelectorAll("button").forEach((button) => window.DuckFur.unmount(button));
-  container.innerHTML = markup;
-}
-function renderAccount() {
-  const user = store.user;
-  let body;
-  if (!store.configured) body = `<div><h2>Account</h2><p>Cloud sync isn't set up on this copy of DuckPlan yet, so your tasks are saved in this browser only.</p></div>`;
-  else if (!user) body = `<div><h2>Account</h2><p>Sign in to keep your planner in sync across devices. We'll email you a sign-in link.</p></div><form class="settings-form" id="sign-in-form"><label><span class="sr-only">Email address</span><input name="email" type="email" required autocomplete="email" placeholder="you@school.org" /></label><button type="submit" class="secondary-button">Email me a link</button><button type="button" class="secondary-button" id="google-sign-in">Use Google</button></form>`;
-  else body = `<div><h2>Account</h2><p>Signed in as ${safeText(user.email || "your account")}. Your planner syncs to every device you sign in on.</p></div><div class="settings-actions"><button type="button" class="secondary-button" id="sign-out">Sign out</button></div>`;
-  const offer = localImportCount ? `<div class="settings-row" id="local-import-row"><div><h2>Bring your local tasks</h2><p>This browser has ${localImportCount} task${localImportCount === 1 ? "" : "s"} from before you signed in. Copy them into your account?</p></div><div class="settings-actions"><button type="button" class="secondary-button" id="import-local">Import tasks</button><button type="button" class="secondary-button" id="dismiss-import">Not now</button></div></div>` : "";
-  replaceSettings(els.accountSettings, `<div class="settings-row">${body}</div>${offer}`);
-  els.resetDemo.closest(".settings-row").hidden = store.mode === "cloud";
-}
-function renderAxis() {
-  let body;
-  if (store.mode !== "cloud") body = `<div><h2>Axis connection</h2><p>Sign in, then paste your Axis calendar feed link to import classes and assignments.</p></div><button type="button" class="secondary-button" id="connect-axis">Sign in first</button>`;
-  else if (!axisStatus.connected) body = `<div><h2>Axis connection</h2><p>In Axis, open your calendar's subscribe option and copy the feed link (it ends in <code>iCal.aspx</code>). Treat it like a password.</p></div><form class="settings-form" id="axis-form"><label><span class="sr-only">Axis feed link</span><input name="icalUrl" type="url" required autocomplete="off" spellcheck="false" placeholder="webcal://…myschoolapp.com/podium/feed/iCal.aspx?z=…" /></label><button type="submit" class="secondary-button">Connect Axis</button></form>`;
-  else body = `<div><h2>Axis connection</h2><p>${safeText(relativeSyncTime(axisStatus.lastSyncedAt))}. DuckPlan re-syncs every few hours.${axisStatus.lastError ? ` Last problem: ${safeText(axisStatus.lastError)}` : ""}</p></div><div class="settings-actions"><button type="button" class="secondary-button" id="axis-sync-now">Sync now</button><button type="button" class="secondary-button" id="axis-disconnect">Disconnect</button></div>`;
-  replaceSettings(els.axisSettings, `<div class="settings-row">${body}</div>`);
-  els.syncCopy.textContent = store.mode !== "cloud" ? "Not signed in" : axisStatus.connected ? (axisStatus.lastError ? "Needs attention" : relativeSyncTime(axisStatus.lastSyncedAt)) : "Not connected";
-  els.syncInfo.setAttribute("aria-label", axisStatus.connected ? "Sync Axis now" : "Set up Axis sync");
-}
-async function refreshAccountState() {
-  try {
-    [axisStatus, localImportCount] = await Promise.all([store.axisStatus(), store.localImportOffer()]);
-  } catch (error) { console.error(error); }
-  renderAccount(); renderAxis(); requestAnimationFrame(() => setupFurMaterial());
 }
 
 function rangeLabel(dates) {
@@ -367,10 +326,6 @@ function openClassModal(id = null) {
   els.classModal.showModal(); setupFurMaterial(); els.classForm.elements.name.focus();
 }
 function closeClassModal() { els.classModal.close(); editingClassId = null; setupFurMaterial(); }
-async function runAction(button, action) {
-  if (button) button.disabled = true;
-  try { await action(); } catch (error) { reportError(error); } finally { if (button?.isConnected) button.disabled = false; }
-}
 
 document.addEventListener("click", (event) => {
   const drawerDismiss = event.target.closest(".drawer-close,.sidebar-scrim"); if (drawerDismiss) setSidebar(false);
@@ -442,53 +397,11 @@ els.archiveClass.addEventListener("click", () => {
   store.upsertClass({ ...existing, archived: true }).then(() => showToast(`${existing.name} archived. Its tasks are kept.`), reportError);
 });
 els.syncInfo.addEventListener("click", () => {
-  if (store.mode === "cloud" && axisStatus.connected) runAction(els.syncInfo, syncAxisNow);
-  else { setView("settings"); showToast(store.mode === "cloud" ? "Paste your Axis feed link to connect." : "Sign in to connect Axis."); }
+  setView("settings"); showToast("Axis sync isn't available yet.");
 });
 els.resetDemo.addEventListener("click", () => { store.resetLocalDemo().then(() => { selectedDate = nowKey(); showToast("Demo tasks reset."); }, reportError); });
 
-async function syncAxisNow() {
-  const result = await store.syncAxisNow();
-  showToast(`Axis synced: ${result.added} new, ${result.updated} updated.`);
-  await refreshAccountState();
-}
-els.accountSettings.addEventListener("submit", (event) => {
-  if (event.target.id !== "sign-in-form") return;
-  event.preventDefault();
-  const email = new FormData(event.target).get("email").trim();
-  runAction(event.submitter, async () => { await store.signInWithEmail(email); showToast(`Check ${email} for your sign-in link.`); });
-});
-els.accountSettings.addEventListener("click", (event) => {
-  const button = event.target.closest("button"); if (!button) return;
-  if (button.id === "google-sign-in") runAction(button, () => store.signInWithGoogle());
-  if (button.id === "sign-out") runAction(button, async () => { await store.signOut(); showToast("Signed out. Showing this browser's local tasks."); });
-  if (button.id === "dismiss-import") { store.dismissLocalImport(); refreshAccountState(); }
-  if (button.id === "import-local") runAction(button, async () => { const count = await store.importLocalTasks(); showToast(`Imported ${count} task${count === 1 ? "" : "s"}.`); await refreshAccountState(); });
-});
-els.axisSettings.addEventListener("submit", (event) => {
-  if (event.target.id !== "axis-form") return;
-  event.preventDefault();
-  const input = event.target.elements.icalUrl;
-  let link;
-  try { link = window.DuckAxisIcal.normalizeFeedUrl(input.value); } catch (error) { showToast(error.message); input.focus(); return; }
-  runAction(event.submitter, async () => {
-    showToast("Connecting to Axis…");
-    const result = await store.connectAxis(link);
-    const count = (value, one, many) => `${value} ${value === 1 ? one : many}`;
-    showToast(`Axis connected: ${count(result.added, "assignment", "assignments")} and ${count(result.classesAdded, "class", "classes")} imported.`);
-    await refreshAccountState();
-  });
-});
-els.axisSettings.addEventListener("click", (event) => {
-  const button = event.target.closest("button"); if (!button) return;
-  if (button.id === "connect-axis") { els.accountSettings.querySelector("input[name=email]")?.focus(); showToast(store.configured ? "Sign in first, then connect Axis." : "Cloud sync isn't set up on this copy of DuckPlan yet."); }
-  if (button.id === "axis-sync-now") runAction(button, syncAxisNow);
-  if (button.id === "axis-disconnect") runAction(button, async () => { await store.disconnectAxis(); showToast("Axis disconnected. Imported assignments stay in your planner."); await refreshAccountState(); });
-});
-store.subscribe(({ reason }) => {
-  renderAll();
-  if (reason === "load" || reason === "auth") refreshAccountState();
-});
+store.subscribe(() => renderAll());
 
 function refreshDateBoundary() {
   const nextToday = nowKey();
@@ -502,6 +415,5 @@ setInterval(refreshDateBoundary, 60000);
 
 const requestedView = location.hash.replace("#", "");
 renderAll();
-renderAccount(); renderAxis();
 setView(document.querySelector(`#view-${requestedView}`) || ["today", "calendar"].includes(requestedView) ? requestedView : "home");
 store.init().catch(reportError);
