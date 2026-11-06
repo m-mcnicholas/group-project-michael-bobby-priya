@@ -78,10 +78,16 @@ old RLS test), the Axis sync rules, cron, Google sign-in, and the browser store 
 
 ## Hosted environments
 
-**Status (2026-11-05):** both D1 databases exist (their ids are in `wrangler.jsonc`). **Dev is live** at
-<https://duckplan-dev.duckplan-cloudflare.workers.dev> with the migration applied (no seed). Since the
-switch to passwords, dev needs `npm run db:migrate:dev && npm run deploy:dev` once more to pick up
-`0002_password_sign_in.sql`; after that, anyone can create an account on the site. **Prod (`duckplan-prod`) is empty:** no migration, no Worker.
+**Status (2026-11-05):** both D1 databases exist (their ids are in `wrangler.jsonc`) and both have
+`0001` and `0002` applied (no seed). Both Workers run the email + password build with the 30-minute Axis cron:
+
+| Environment | Worker URL | D1 |
+| --- | --- | --- |
+| dev | <https://duckplan-dev.duckplan-cloudflare.workers.dev> | `duckplan-dev` |
+| production | <https://duckplan.duckplan-cloudflare.workers.dev> | `duckplan-prod` |
+
+Anyone can create an account on either site. Google sign-in stays hidden until its secrets are set.
+The public Netlify site (<https://duckplan-mbp.netlify.app>) is separate and stays local-only.
 
 ## Set up the hosted environments (one time)
 
