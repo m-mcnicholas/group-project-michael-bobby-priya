@@ -1,0 +1,29 @@
+Chat Check — Did the Blender work actually improve DuckPlan's visible fur behavior?
+
+The user says: "I don't see how Blender helps the fur act more realistically or better; the behavior seems the same as before." Please evaluate this directly and critically, without treating our test counts, Blender file or parameter sharing as proof of perceptual improvement.
+
+The TEST feature branch has already been synchronized to GitHub BEFORE this message. Review exact commit 9945193bc7f1e572bafa1ee892210c5f82cf5627 on codex/physical-fur-sheet:
+https://github.com/bobbyzhang133-star/Duck-Plan-Test/tree/9945193bc7f1e572bafa1ee892210c5f82cf5627
+Compare with pre-Blender baseline 2d8b46c (the previous recovery review concerned 487ea2665dcd794c507e6ee07904313680531468). Confirm exact-source access and say which evidence you actually inspected.
+
+Read plans.md, the newest sections of landing/FUR_MATERIAL.md, references/blender/README.md and the reference scripts/CSVs/measurements. Inspect landing/fur-material.js, fur-response.js, fur-dispersal.js, fur-sheet.js, material-transitions.js and tests.
+
+What was actually done (coding-session claims to verify):
+- Blender MCP created a separate .blend reference, 4,000 short double-ribbon/barbed bundles with baked poses, plus an independent 64-fiber five-segment rooted sphere-contact probe at 240 Hz. These are custom spring/PBD experiments, NOT native hair dynamics or biologically validated duck down.
+- The browser does NOT import the Blender geometry, materials, animation or curves. It remains the existing interactive WebGL2 renderer.
+- The browser change primarily replaced the sheet's analytic recovery with a compact 32-direction target/spring atlas reproducing the EXISTING approved button solver. It carries initial displacement/velocity, targets, remaining source holds and full newly arrived holds. Local arrival uses the presented radius inverse. The live source continues its native simulator; one wave and the established dye/flatten/native-HTML sequence remain.
+- Sheet tip taper and compression/depression-dependent height/width were refined. The ordinary button renderer, lettering, hover/press and normal recovery were deliberately preserved. We acknowledge that this can make the experience look much like the older version.
+- The recent arrival-lookup optimization (37.4 to 2.9 ms warm Node microbenchmark) changes no arrival samples. It is not evidence of more realistic fur. The Escape dialog lifecycle fix is also unrelated to realism.
+
+Evidence in this exact GitHub tree:
+references/browser/baseline-280ms.webm and shared-spring-280ms.webm are the common-renderer recovery A/B, not a controlled before/after of all Blender work. shared-spring-5000ms.webm is the final 5-second case; flatten-85.jpg is a held formation frame. references/blender/ contains the .blend, press/growth/contact/dyed/flat renders and CSVs. Access these if supported; explicitly say if you cannot play clips or inspect .blend. The local URL http://127.0.0.1:4206/fur-lab.html#sheet-lab is NOT remotely accessible. No image/video upload is attached to this message.
+
+Please answer:
+1. Does the source/evidence support any noticeable realism improvement? Separate actual behavior changes from timing consistency, material appearance tweaks, optimization and documentation.
+2. Why might it look essentially the same? Identify exact functions/shader geometry or response-model limitations: bending along a strand versus moving a billboard, distributed contact/compression, neighbor interactions, directional combing, friction/matting and viscoelastic recovery, damping and surface shading. Only diagnose what the source supports; distinguish visual hypotheses.
+3. Trace each claimed Blender finding to a concrete browser change. Which findings were never translated? Is the Blender study sufficiently independent/useful, or partly circular because it recreates the existing JS spring? Is its contact probe representative of dense short duck down?
+4. Would importing actual Blender-authored strand geometry/materials improve the observed behavior, or would the same live response model still dominate? Recommend an evidence-based path rather than assuming a .glb import automatically creates realism. The user's expectation was a substantive Blender-assisted fur upgrade; clearly assess that gap.
+5. Return severity-ranked findings with file/function causes and a minimal next implementation plan that produces a visible, testable improvement. Preserve approved resting silhouette/lettering/icons, click origin, source continuity, one filled wave, color-first uniform flattening, native UI sharpness, stable workspace/sidebar, accessibility, cancellation and GPU cleanup. If preserving the existing normal recovery conflicts with a requested behavioral change, state the tradeoff rather than silently changing it.
+6. Define matched-input before/after recordings, real contact/brush/recovery measurements and visual acceptance checks. Our 97 passing tests validate narrower numerical/lifecycle properties, not biological realism or user approval. Provide a ready-to-use Codex prompt after the findings if changes are warranted.
+
+Review only. Do not implement, deploy, modify the shared group repository or claim visual approval. Do not invent inspection or tests you could not perform. The current prototype is not visually approved.

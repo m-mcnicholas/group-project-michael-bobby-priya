@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "offset",
+  "recoveryDelay": 280,
+  "simulationHz": 120,
+  "events": [
+    {
+      "t": 0,
+      "type": "press",
+      "x": 0.25,
+      "y": 0.38
+    },
+    {
+      "t": 180,
+      "type": "release",
+      "x": 0.25,
+      "y": 0.38
+    }
+  ],
+  "duration": 3960
+}

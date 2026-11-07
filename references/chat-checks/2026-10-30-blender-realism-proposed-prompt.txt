@@ -1,0 +1,319 @@
+DuckPlan Chat Check — Turn Blender Research Into a Visibly Better Fur Simulation
+Repository and baseline
+
+TEST repository:
+https://github.com/bobbyzhang133-star/Duck-Plan-Test
+
+Branch: codex/physical-fur-sheet
+
+Current reviewed commit:
+9945193bc7f1e572bafa1ee892210c5f82cf5627
+
+Pre-Blender comparison:
+2d8b46c763e7c44675717b8f92d22b8c383e4e70
+
+Read the current plans.md, landing/FUR_MATERIAL.md, Blender scripts, measurements, WebGL2 implementation, and relevant project rules.
+
+Work only in Duck-Plan-Test. No public deployment or shared group repository changes.
+
+Problem
+
+The user reports:
+
+"I don't see how Blender helps the fur act more realistically or better; the behavior seems the same as before."
+
+Treat this feedback as a legitimate visual failure of the previous Blender-assisted upgrade.
+
+The earlier work improved recovery consistency but did not substantially change the interactive strand deformation model.
+
+The browser still primarily renders single elongated quads whose root-to-tip direction changes under pressure.
+
+The Blender five-segment contact experiment was not translated into the actual button or workspace strand mechanics.
+
+Objective
+
+Implement and validate a visibly more natural fur deformation model using the Blender reference as a starting point.
+
+The objective is not additional parameter sharing, another spring-response atlas, more documentation, or numerical optimization.
+
+The objective is improved observable behavior during pressing, brushing, recovery and outward wave propagation.
+
+Part 1 — Establish controlled baseline evidence
+
+Create matched-input recordings of the existing renderer.
+
+Use identical:
+
+Viewport and device scale
+
+Button size
+
+Fur density and appearance
+
+Pointer location
+
+Press duration
+
+Brush path and speed
+
+Recovery delay
+
+Animation timing
+
+Rendering quality
+
+Capture:
+
+Center press
+
+Off-center press
+
+Slow brush
+
+Fast brush
+
+Release and recovery
+
+Button-to-sheet expansion
+
+Save deterministic input traces so both the baseline and enhanced renderer receive the same interactions.
+
+Do not use the legacy analytic-recovery toggle as the sole baseline. It does not compare the intended Blender-derived strand behavior.
+
+Part 2 — Use the actual Blender findings
+
+Review references/blender/.
+
+Separate:
+
+Findings from the reduced spring experiment, which reproduces existing button behavior
+
+Findings from the independent five-segment contact probe
+
+Appearance-only Blender results
+
+Unimplemented physical behaviors
+
+Do not describe the reduced spring study as independent validation of realism.
+
+Focus on translating the contact probe's distinctive contribution: anchored, curved, multi-segment strand deformation under localized contact.
+
+Part 3 — Prototype segmented fur geometry
+
+Create an experimental multi-segment strand renderer.
+
+Requirements:
+
+Preserve stable roots.
+
+Use at least one or two intermediate deformation points.
+
+Allow different root, middle and tip orientations.
+
+Preserve short-pile fur appearance.
+
+Support pressure-dependent curvature.
+
+Support natural recovery of curved shapes.
+
+Maintain current root-to-tip color variation and soft edges.
+
+Use a lightweight GPU-compatible representation.
+
+Do not introduce full CPU simulation for every fiber unless profiling shows it is affordable.
+
+Do not simply import static Blender meshes and call that a physics upgrade.
+
+Part 4 — Prototype collective pile behavior
+
+Test two bounded additions:
+
+Directional combing memory
+
+A brush stroke should temporarily align nearby fur in the direction of motion.
+
+The affected pile should gradually recover its normal orientation.
+
+Neighborhood compression
+
+A localized press should cause coherent compression and some neighboring outward redistribution.
+
+Use a coarse spatial deformation field or another efficient approximation rather than expensive pairwise fiber collision.
+
+Keep these effects tunable and disableable.
+
+Evaluate each independently before combining them.
+
+Part 5 — Preserve existing button identity
+
+Keep the current approved renderer available as the baseline.
+
+Preserve:
+
+Resting fur silhouette
+
+Root-owned lettering and icons
+
+Label readability
+
+Hover response
+
+Immediate press feedback
+
+Recovery semantics
+
+Keyboard accessibility
+
+Reduced motion
+
+Semantic DOM controls
+
+The enhanced mode may change deformation and recovery appearance, but do not silently alter the approved resting design.
+
+Document tradeoffs where realistic deformation conflicts with the existing visual behavior.
+
+Part 6 — Extend successful behavior into the workspace wave
+
+Once an enhancement produces a visible improvement on the button, connect the same deformation model to the growing fur sheet.
+
+Preserve:
+
+Exact click origin
+
+Zero-radius onset
+
+Measured 32-sector dispersal handoff
+
+Shared local arrival and recovery timing
+
+Coverage-driven source integration
+
+One filled rolling growth wave
+
+Destination coloring while furry
+
+Whole-sheet simultaneous flattening
+
+Sharp native HTML
+
+Stable viewport, scroll and sidebar
+
+The sheet and button should exhibit compatible strand curvature, compression and recovery.
+
+Do not create another independent wave or settlement front.
+
+Part 7 — Compare actual visible behavior
+
+Build an A/B mode inside Fur Lab:
+
+A: Current approved geometry and response
+
+B: Blender-informed enhanced strand geometry and behavior
+
+Replay identical saved pointer traces into both modes.
+
+Capture actual-size, synchronized video.
+
+Evaluate:
+
+Visible bending along each strand
+
+Coherence of surrounding pile movement
+
+Compression depth and silhouette
+
+Combing direction persistence
+
+Recovery shape and smoothness
+
+Root stability
+
+Source-to-sheet material continuity
+
+Perceived softness
+
+Do not count a change as successful solely because more vertices move.
+
+The enhanced mode must be visibly distinguishable and preferable during interaction, without degrading the resting appearance.
+
+Part 8 — Performance and reliability
+
+Benchmark the enhanced mode on desktop and mobile-width viewports.
+
+Measure:
+
+Actual frame pacing
+
+CPU simulation work
+
+GPU submission time
+
+Vertex/instance counts
+
+Memory usage
+
+Startup latency
+
+Adaptive quality changes
+
+WebGL context lifecycle
+
+If the full enhanced geometry is too costly, test selective use on the contact region, active brush region or wave crest while retaining simpler geometry elsewhere.
+
+Preserve keyboard, reduced motion, interruptions, cancellation, context loss and full GPU cleanup.
+
+Do not increase duration or reduce responsiveness merely to hide performance regressions.
+
+Part 9 — Acceptance gate
+
+Do not promote the enhanced mode to all DuckPlan buttons until:
+
+Matched-input recordings demonstrate an observable improvement.
+
+The user can visually compare old and new behavior.
+
+Fur lettering and resting appearance remain acceptable.
+
+The browser meets the agreed performance budget.
+
+The continuous wave and UI formation still work.
+
+Accessibility and cleanup regressions pass.
+
+If the experiment produces no meaningful visible improvement, report that result and retain the original renderer.
+
+Do not frame an unsuccessful experiment as completed realism work.
+
+Deliverables
+
+Provide:
+
+Analysis of which Blender findings were actually useful
+
+Experimental segmented-fur implementation
+
+Optional combing and neighborhood-response variants
+
+Controlled old/new recordings
+
+Measurements of strand curvature and pile movement
+
+Performance comparison
+
+Regression results
+
+Remaining visual limitations
+
+Updated documentation
+
+Local preview for review
+
+No deployment or shared repository changes.
+
+Final objective
+
+DuckPlan's fur should not merely move in the same direction more accurately. It should deform more naturally.
+
+The user should be able to observe the difference when pressing, brushing and releasing the material.
+
+The Blender-assisted work is successful only if those improvements are demonstrated in the actual interactive WebGL2 renderer.

@@ -1,0 +1,841 @@
+{
+  "variant": "no-release",
+  "supported": [
+    "element",
+    "event",
+    "first-input",
+    "interaction-contentful-paint",
+    "largest-contentful-paint",
+    "layout-shift",
+    "long-animation-frame",
+    "longtask",
+    "mark",
+    "measure",
+    "navigation",
+    "paint",
+    "resource",
+    "soft-navigation",
+    "visibility-state"
+  ],
+  "viewport": [
+    1280,
+    720
+  ],
+  "dpr": 2,
+  "reports": [
+    {
+      "start": 2672.9000000059605,
+      "eventAt": 2672.7000000029802,
+      "delay": 0.2,
+      "trusted": false,
+      "input": "click",
+      "source": "plan-selected-date",
+      "opening": true,
+      "frames": [
+        {
+          "at": 17.1,
+          "timestamp": 5.77,
+          "gap": 17.1,
+          "lateness": 11.33
+        },
+        {
+          "at": 24.9,
+          "timestamp": 5.77,
+          "gap": 7.8,
+          "lateness": 19.13
+        },
+        {
+          "at": 25.4,
+          "timestamp": 23.8,
+          "gap": 0.5,
+          "lateness": 1.6
+        },
+        {
+          "at": 41.5,
+          "timestamp": 40.4,
+          "gap": 16.1,
+          "lateness": 1.1
+        },
+        {
+          "at": 60.6,
+          "timestamp": 56.4,
+          "gap": 19.1,
+          "lateness": 4.2
+        },
+        {
+          "at": 78.8,
+          "timestamp": 71.7,
+          "gap": 18.2,
+          "lateness": 7.1
+        },
+        {
+          "at": 99.3,
+          "timestamp": 90,
+          "gap": 20.5,
+          "lateness": 9.3
+        },
+        {
+          "at": 138.1,
+          "timestamp": 122.6,
+          "gap": 38.8,
+          "lateness": 15.5
+        },
+        {
+          "at": 192.2,
+          "timestamp": 171.8,
+          "gap": 54.1,
+          "lateness": 20.4
+        },
+        {
+          "at": 237.1,
+          "timestamp": 223.8,
+          "gap": 44.9,
+          "lateness": 13.3
+        },
+        {
+          "at": 261,
+          "timestamp": 240.4,
+          "gap": 23.9,
+          "lateness": 20.6
+        }
+      ],
+      "phases": [
+        {
+          "phase": "opening",
+          "at": 15.9
+        },
+        {
+          "phase": "rest",
+          "at": 293.3
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 2966.2000000029802,
+      "duration": 293.3,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 2673,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 3441.9000000059605,
+      "eventAt": 3441.9000000059605,
+      "delay": 0,
+      "trusted": false,
+      "input": "click",
+      "source": "cancel-task",
+      "opening": false,
+      "frames": [
+        {
+          "at": 10.2,
+          "timestamp": 4.8,
+          "gap": 10.2,
+          "lateness": 5.4
+        },
+        {
+          "at": 38.9,
+          "timestamp": 38.1,
+          "gap": 28.7,
+          "lateness": 0.8
+        },
+        {
+          "at": 55.7,
+          "timestamp": 54.7,
+          "gap": 16.8,
+          "lateness": 1
+        },
+        {
+          "at": 98.7,
+          "timestamp": 87.4,
+          "gap": 43,
+          "lateness": 11.3
+        },
+        {
+          "at": 140.2,
+          "timestamp": 121.5,
+          "gap": 41.5,
+          "lateness": 18.7
+        },
+        {
+          "at": 167.9,
+          "timestamp": 154.8,
+          "gap": 27.7,
+          "lateness": 13.1
+        },
+        {
+          "at": 193.1,
+          "timestamp": 188.1,
+          "gap": 25.2,
+          "lateness": 5
+        },
+        {
+          "at": 240.7,
+          "timestamp": 221.1,
+          "gap": 47.6,
+          "lateness": 19.6
+        },
+        {
+          "at": 273.3,
+          "timestamp": 271.1,
+          "gap": 32.6,
+          "lateness": 2.2
+        }
+      ],
+      "phases": [
+        {
+          "phase": "closing",
+          "at": 9.6
+        },
+        {
+          "phase": "rest",
+          "at": 311.8
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 3753.7000000029802,
+      "duration": 311.8,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 3442.1000000089407,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 4253.4000000059605,
+      "eventAt": 4253.4000000059605,
+      "delay": 0,
+      "trusted": false,
+      "input": "click",
+      "source": "plan-selected-date",
+      "opening": true,
+      "frames": [
+        {
+          "at": 13.2,
+          "timestamp": 9.95,
+          "gap": 13.2,
+          "lateness": 3.25
+        },
+        {
+          "at": 18.7,
+          "timestamp": 9.95,
+          "gap": 5.5,
+          "lateness": 8.75
+        },
+        {
+          "at": 43.3,
+          "timestamp": 24.8,
+          "gap": 24.6,
+          "lateness": 18.5
+        },
+        {
+          "at": 66.3,
+          "timestamp": 58.5,
+          "gap": 23,
+          "lateness": 7.8
+        },
+        {
+          "at": 104.5,
+          "timestamp": 93.2,
+          "gap": 38.2,
+          "lateness": 11.3
+        },
+        {
+          "at": 132.6,
+          "timestamp": 126.2,
+          "gap": 28.1,
+          "lateness": 6.4
+        },
+        {
+          "at": 171.4,
+          "timestamp": 159.8,
+          "gap": 38.8,
+          "lateness": 11.6
+        },
+        {
+          "at": 198.5,
+          "timestamp": 191.5,
+          "gap": 27.1,
+          "lateness": 7
+        },
+        {
+          "at": 239.7,
+          "timestamp": 226.6,
+          "gap": 41.2,
+          "lateness": 13.1
+        },
+        {
+          "at": 262.5,
+          "timestamp": 258.5,
+          "gap": 22.8,
+          "lateness": 4
+        }
+      ],
+      "phases": [
+        {
+          "phase": "opening",
+          "at": 12.8
+        },
+        {
+          "phase": "rest",
+          "at": 298.9
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 4552.300000011921,
+      "duration": 298.9,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 4253.5,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 5018.70000000298,
+      "eventAt": 5018.600000008941,
+      "delay": 0.1,
+      "trusted": false,
+      "input": "click",
+      "source": "cancel-task",
+      "opening": false,
+      "frames": [
+        {
+          "at": 6.1,
+          "timestamp": -5.31,
+          "gap": 6.1,
+          "lateness": 11.41
+        },
+        {
+          "at": 14.9,
+          "timestamp": 11.3,
+          "gap": 8.8,
+          "lateness": 3.6
+        },
+        {
+          "at": 45.6,
+          "timestamp": 44.6,
+          "gap": 30.7,
+          "lateness": 1
+        },
+        {
+          "at": 64.9,
+          "timestamp": 61.2,
+          "gap": 19.3,
+          "lateness": 3.7
+        },
+        {
+          "at": 77.4,
+          "timestamp": 76.4,
+          "gap": 12.5,
+          "lateness": 1
+        },
+        {
+          "at": 97.9,
+          "timestamp": 94.6,
+          "gap": 20.5,
+          "lateness": 3.3
+        },
+        {
+          "at": 131.4,
+          "timestamp": 111.3,
+          "gap": 33.5,
+          "lateness": 20.1
+        },
+        {
+          "at": 172.1,
+          "timestamp": 159.8,
+          "gap": 40.7,
+          "lateness": 12.3
+        },
+        {
+          "at": 180.5,
+          "timestamp": 176.3,
+          "gap": 8.4,
+          "lateness": 4.2
+        },
+        {
+          "at": 213.6,
+          "timestamp": 209.6,
+          "gap": 33.1,
+          "lateness": 4
+        },
+        {
+          "at": 255,
+          "timestamp": 244.6,
+          "gap": 41.4,
+          "lateness": 10.4
+        },
+        {
+          "at": 297.9,
+          "timestamp": 277.6,
+          "gap": 42.9,
+          "lateness": 20.3
+        },
+        {
+          "at": 332.9,
+          "timestamp": 326.1,
+          "gap": 35,
+          "lateness": 6.8
+        }
+      ],
+      "phases": [
+        {
+          "phase": "closing",
+          "at": 5
+        },
+        {
+          "phase": "rest",
+          "at": 370.8
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 5389.5,
+      "duration": 370.8,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 5018.70000000298,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 5824.300000011921,
+      "eventAt": 5824.20000000298,
+      "delay": 0.1,
+      "trusted": false,
+      "input": "click",
+      "source": "plan-selected-date",
+      "opening": true,
+      "frames": [
+        {
+          "at": 13.8,
+          "timestamp": 5.68,
+          "gap": 13.8,
+          "lateness": 8.12
+        },
+        {
+          "at": 25.5,
+          "timestamp": 5.7,
+          "gap": 11.7,
+          "lateness": 19.8
+        },
+        {
+          "at": 27.9,
+          "timestamp": 22.3,
+          "gap": 2.4,
+          "lateness": 5.6
+        },
+        {
+          "at": 58.4,
+          "timestamp": 55.5,
+          "gap": 30.5,
+          "lateness": 2.9
+        },
+        {
+          "at": 74.3,
+          "timestamp": 72.4,
+          "gap": 15.9,
+          "lateness": 1.9
+        },
+        {
+          "at": 95.8,
+          "timestamp": 89,
+          "gap": 21.5,
+          "lateness": 6.8
+        },
+        {
+          "at": 110.7,
+          "timestamp": 105,
+          "gap": 14.9,
+          "lateness": 5.7
+        },
+        {
+          "at": 145.7,
+          "timestamp": 139,
+          "gap": 35,
+          "lateness": 6.7
+        },
+        {
+          "at": 176.1,
+          "timestamp": 155.2,
+          "gap": 30.4,
+          "lateness": 20.9
+        },
+        {
+          "at": 208.1,
+          "timestamp": 189,
+          "gap": 32,
+          "lateness": 19.1
+        },
+        {
+          "at": 253.2,
+          "timestamp": 238.9,
+          "gap": 45.1,
+          "lateness": 14.3
+        },
+        {
+          "at": 287.4,
+          "timestamp": 271.3,
+          "gap": 34.2,
+          "lateness": 16.1
+        }
+      ],
+      "phases": [
+        {
+          "phase": "opening",
+          "at": 11.9
+        },
+        {
+          "phase": "rest",
+          "at": 327.1
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 6151.4000000059605,
+      "duration": 327.1,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 5824.4000000059605,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 6588.20000000298,
+      "eventAt": 6588.20000000298,
+      "delay": 0,
+      "trusted": false,
+      "input": "click",
+      "source": "cancel-task",
+      "opening": false,
+      "frames": [
+        {
+          "at": 5.1,
+          "timestamp": -8.08,
+          "gap": 5.1,
+          "lateness": 13.18
+        },
+        {
+          "at": 44.2,
+          "timestamp": 41.7,
+          "gap": 39.1,
+          "lateness": 2.5
+        },
+        {
+          "at": 79.3,
+          "timestamp": 74,
+          "gap": 35.1,
+          "lateness": 5.3
+        },
+        {
+          "at": 127.1,
+          "timestamp": 125.1,
+          "gap": 47.8,
+          "lateness": 2
+        },
+        {
+          "at": 159.1,
+          "timestamp": 141.5,
+          "gap": 32,
+          "lateness": 17.6
+        },
+        {
+          "at": 211.6,
+          "timestamp": 208.5,
+          "gap": 52.5,
+          "lateness": 3.1
+        },
+        {
+          "at": 242.5,
+          "timestamp": 223.5,
+          "gap": 30.9,
+          "lateness": 19
+        },
+        {
+          "at": 279.3,
+          "timestamp": 275.1,
+          "gap": 36.8,
+          "lateness": 4.2
+        }
+      ],
+      "phases": [
+        {
+          "phase": "closing",
+          "at": 4.2
+        },
+        {
+          "phase": "rest",
+          "at": 316.3
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 6904.5,
+      "duration": 316.3,
+      "work": [
+        {
+          "type": "long-animation-frame",
+          "name": "long-animation-frame",
+          "start": 6749.5,
+          "duration": 50.6000000089407,
+          "renderStart": 6799.70000000298,
+          "styleAndLayoutStart": 6799.800000011921,
+          "blockingDuration": 0,
+          "attribution": [],
+          "scripts": []
+        }
+      ],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 6588.4000000059605,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 7394.800000011921,
+      "eventAt": 7394.70000000298,
+      "delay": 0.1,
+      "trusted": false,
+      "input": "click",
+      "source": "plan-selected-date",
+      "opening": true,
+      "frames": [
+        {
+          "at": 6.8,
+          "timestamp": 1.78,
+          "gap": 6.8,
+          "lateness": 5.02
+        },
+        {
+          "at": 11.3,
+          "timestamp": 1.8,
+          "gap": 4.5,
+          "lateness": 9.5
+        },
+        {
+          "at": 19,
+          "timestamp": 18.5,
+          "gap": 7.7,
+          "lateness": 0.5
+        },
+        {
+          "at": 35.5,
+          "timestamp": 35.2,
+          "gap": 16.5,
+          "lateness": 0.3
+        },
+        {
+          "at": 52.4,
+          "timestamp": 51.4,
+          "gap": 16.9,
+          "lateness": 1
+        },
+        {
+          "at": 69,
+          "timestamp": 68.5,
+          "gap": 16.6,
+          "lateness": 0.5
+        },
+        {
+          "at": 84,
+          "timestamp": 83.5,
+          "gap": 15,
+          "lateness": 0.5
+        },
+        {
+          "at": 102.3,
+          "timestamp": 101.9,
+          "gap": 18.3,
+          "lateness": 0.4
+        },
+        {
+          "at": 119.4,
+          "timestamp": 118.5,
+          "gap": 17.1,
+          "lateness": 0.9
+        },
+        {
+          "at": 135.9,
+          "timestamp": 135.2,
+          "gap": 16.5,
+          "lateness": 0.7
+        },
+        {
+          "at": 170.9,
+          "timestamp": 168.5,
+          "gap": 35,
+          "lateness": 2.4
+        },
+        {
+          "at": 207.9,
+          "timestamp": 201,
+          "gap": 37,
+          "lateness": 6.9
+        },
+        {
+          "at": 255.2,
+          "timestamp": 235.1,
+          "gap": 47.3,
+          "lateness": 20.1
+        }
+      ],
+      "phases": [
+        {
+          "phase": "opening",
+          "at": 6.4
+        },
+        {
+          "phase": "rest",
+          "at": 308.2
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 7703,
+      "duration": 308.2,
+      "work": [
+        {
+          "type": "long-animation-frame",
+          "name": "long-animation-frame",
+          "start": 7652.70000000298,
+          "duration": 52.1000000089407,
+          "renderStart": 7702.5,
+          "styleAndLayoutStart": 7703.300000011921,
+          "blockingDuration": 0,
+          "attribution": [],
+          "scripts": []
+        }
+      ],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 7394.9000000059605,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    },
+    {
+      "start": 8153.20000000298,
+      "eventAt": 8153.100000008941,
+      "delay": 0.1,
+      "trusted": false,
+      "input": "click",
+      "source": "cancel-task",
+      "opening": false,
+      "frames": [
+        {
+          "at": 3.5,
+          "timestamp": -6.51,
+          "gap": 3.5,
+          "lateness": 10.01
+        },
+        {
+          "at": 10.7,
+          "timestamp": 10.1,
+          "gap": 7.2,
+          "lateness": 0.6
+        },
+        {
+          "at": 43.8,
+          "timestamp": 43.4,
+          "gap": 33.1,
+          "lateness": 0.4
+        },
+        {
+          "at": 81.4,
+          "timestamp": 76.7,
+          "gap": 37.6,
+          "lateness": 4.7
+        },
+        {
+          "at": 126.5,
+          "timestamp": 125,
+          "gap": 45.1,
+          "lateness": 1.5
+        },
+        {
+          "at": 163.2,
+          "timestamp": 160.1,
+          "gap": 36.7,
+          "lateness": 3.1
+        },
+        {
+          "at": 198.9,
+          "timestamp": 193.4,
+          "gap": 35.7,
+          "lateness": 5.5
+        },
+        {
+          "at": 242.8,
+          "timestamp": 242.3,
+          "gap": 43.9,
+          "lateness": 0.5
+        },
+        {
+          "at": 277.1,
+          "timestamp": 276.8,
+          "gap": 34.3,
+          "lateness": 0.3
+        }
+      ],
+      "phases": [
+        {
+          "phase": "closing",
+          "at": 3.1
+        },
+        {
+          "phase": "rest",
+          "at": 313.8
+        }
+      ],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "end": 8467,
+      "duration": 313.8,
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 8153.300000011921,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    }
+  ]
+}

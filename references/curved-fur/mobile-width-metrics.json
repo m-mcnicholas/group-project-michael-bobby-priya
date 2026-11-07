@@ -1,0 +1,9 @@
+{
+  "viewport": "390x844 CSS px; desktop browser, not a physical phone",
+  "status": "3942 / 3871 ms · event 26/26 · fixed 120 Hz · 7 FPS · max frame 183.4 ms · sim 164.80 ms · submission 0.20 ms · complete",
+  "metrics": [
+    "WebGL2 instanced strands · 5200 inspection + 9932 label fibers\n6 vertices/fiber · 31200 submitted vertices\ncurvature deviation 0.000 CSS px · replay peak 0.000 px\nsim max 81.80 ms · submission 0.20 ms · GPU 5.87 ms max\nrebuild 1.20 ms · GPU buffers/texture 270401 bytes\nroot drift 0.000 px · pile field 0 CPU bytes\ncombing memory off · neighbor compression off\n",
+    "WebGL2 instanced strands · 5200 inspection + 9932 label fibers\n18 vertices/fiber · 93600 submitted vertices\ncurvature deviation 0.001 CSS px · replay peak 1.340 px\nsim max 83.00 ms · submission 0.20 ms · GPU 5.87 ms max\nrebuild 1.30 ms · GPU buffers/texture 278593 bytes\nroot drift 0.000 px · pile field 26624 CPU bytes\ncombing memory on · neighbor compression on\n",
+    "Colored fur settles into UI · 100% · 56 FPS · max 37.2 ms · 0 overlay\n{\"contexts\":0,\"buffers\":0,\"programs\":0,\"textures\":0,\"framebuffers\":0}"
+  ]
+}

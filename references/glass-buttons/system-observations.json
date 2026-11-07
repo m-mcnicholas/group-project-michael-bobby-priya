@@ -1,0 +1,29 @@
+{
+  "observedLocalTimes": [
+    "2026-11-02 13:51:03",
+    "2026-11-02 13:53:23"
+  ],
+  "timezone": "America/Los_Angeles",
+  "logicalCores": 8,
+  "physicalMemoryBytes": 17179869184,
+  "loadAverages": [
+    [
+      89.73,
+      45.54,
+      26.74
+    ],
+    [
+      53.14,
+      45.23,
+      29.3
+    ]
+  ],
+  "cpuIdlePercentApprox": [
+    40,
+    45
+  ],
+  "compressedMemoryApproxGiB": 5.7,
+  "swapUsedMiB": 7961.44,
+  "memoryPressureFreePercent": 43,
+  "limits": "These are investigation-period observations, not synchronized per-frame attribution. Swap used is not evidence of active paging; free percentage is not a critical-pressure determination. No application data or process command lines are retained."
+}

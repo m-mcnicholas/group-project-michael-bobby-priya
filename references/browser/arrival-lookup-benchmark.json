@@ -1,0 +1,14 @@
+{
+  "scope": "Node warm arrival-map microbenchmark; not browser FPS",
+  "baselineCommit": "597db8c",
+  "node": "v26.12.1",
+  "baseline": {
+    "medianMs": 37.37529200000006,
+    "maxMs": 39.338667000000015
+  },
+  "current": {
+    "medianMs": 2.855874999999969,
+    "maxMs": 3.3190839999999753
+  },
+  "maxArrivalDifferenceSeconds": 0
+}

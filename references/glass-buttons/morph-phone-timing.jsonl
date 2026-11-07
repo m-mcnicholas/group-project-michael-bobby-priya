@@ -1,0 +1,2 @@
+{"phase":"open","result":"complete","wallMs":251.4,"samples":15,"medianMs":16.7,"p95Ms":16.8,"maxMs":16.8,"over25ms":0}
+{"phase":"close","result":"complete","wallMs":306.8,"samples":18,"medianMs":16.7,"p95Ms":16.7,"maxMs":16.7,"over25ms":0}

@@ -8,6 +8,7 @@
   const TASKS_KEY = "duckplan-demo-tasks-v1";
   const CLASSES_KEY = "duckplan-demo-classes-v1";
   const IMPORTED_KEY = "duckplan-local-import-v1";
+  const DEVICE_EXTRAS_KEY = "duckplan-device-task-extras-v1";
   const NO_CLASS = { id: null, name: "No class", color: "#8f8a7d", soft: "#efede7", code: "•", teacher: "", period: "", archived: false };
 
   function newId() { return globalThis.crypto.randomUUID(); }
@@ -205,6 +206,23 @@
     let authError = null;
     let providers = { password: true, google: false };
 
+    function readDeviceExtras() {
+      try { return JSON.parse(storage.getItem(DEVICE_EXTRAS_KEY)) || {}; }
+      catch { return {}; }
+    }
+    function writeDeviceExtras(task) {
+      const extras = readDeviceExtras();
+      extras[task.id] = {
+        reminderChoice: task.reminderChoice || "default",
+        actualMinutes: Number.isInteger(task.actualMinutes) ? task.actualMinutes : null,
+      };
+      try { storage.setItem(DEVICE_EXTRAS_KEY, JSON.stringify(extras)); } catch { /* storage unavailable */ }
+    }
+    function hydrateDeviceExtras(next) {
+      const extras = readDeviceExtras();
+      return { ...next, tasks: next.tasks.map((task) => ({ ...task, ...(extras[task.id] || {}) })) };
+    }
+
     function notify(reason) { listeners.forEach((listener) => listener({ reason, mode: backend.mode })); }
     function replaceState(next) { state = next; }
     function cloudFor(user) { return createCloudBackend({ api, user, liveUrl: liveSocketUrl(apiUrl, locationRef), WebSocketImpl }); }
@@ -212,7 +230,7 @@
     async function activate(nextBackend) {
       unwatch();
       backend = nextBackend;
-      replaceState(await backend.load());
+      replaceState(hydrateDeviceExtras(await backend.load()));
       unwatch = backend.mode === "local"
         ? backend.watch((next) => { replaceState(next); notify("remote"); })
         : backend.watch({ onRow: applyRowChange, onReload: reloadCloud });
@@ -220,14 +238,14 @@
     }
     async function reloadCloud() {
       if (backend.mode !== "cloud") return;
-      try { replaceState(await backend.load()); notify("remote"); } catch (error) {
+      try { replaceState(hydrateDeviceExtras(await backend.load())); notify("remote"); } catch (error) {
         if (error.status === 401) { await activate(local); notify("auth"); }
       }
     }
     function applyRowChange(table, row) {
       if (table === "items") {
         const others = state.tasks.filter((task) => task.id !== row.id);
-        state = { ...state, tasks: row.deleted_at ? others : [...others, rowToTask(row)] };
+        state = { ...state, tasks: row.deleted_at ? others : [...others, hydrateDeviceExtras({ tasks: [rowToTask(row)] }).tasks[0]] };
       } else if (table === "classes") {
         const others = state.classes.filter((item) => item.id !== row.id);
         state = { ...state, classes: [...others, rowToClass(row)] };
@@ -314,6 +332,7 @@
 
       upsertItem(task) {
         const next = { completed: false, ...task, id: task.id || newId(), schemaVersion: 2 };
+        writeDeviceExtras(next);
         return mutate((current) => ({ ...current, tasks: [...current.tasks.filter((item) => item.id !== next.id), next] }), (current) => backend.saveTask(next, current)).then(() => next);
       },
       toggleComplete(id, completed) {

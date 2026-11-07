@@ -1,0 +1,950 @@
+{
+  "variant": "baseline",
+  "supported": [
+    "element",
+    "event",
+    "first-input",
+    "interaction-contentful-paint",
+    "largest-contentful-paint",
+    "layout-shift",
+    "long-animation-frame",
+    "longtask",
+    "mark",
+    "measure",
+    "navigation",
+    "paint",
+    "resource",
+    "soft-navigation",
+    "visibility-state"
+  ],
+  "viewport": [
+    1280,
+    720
+  ],
+  "dpr": 2,
+  "reports": [
+    {
+      "wall": "2026-11-02T21:52:36.904Z",
+      "start": 1551.2999999970198,
+      "eventAt": 1551.2999999970198,
+      "delay": 0,
+      "trusted": false,
+      "input": "idle",
+      "source": "plan-selected-date",
+      "opening": null,
+      "frames": [
+        {
+          "at": 0.3,
+          "timestamp": -10.3,
+          "gap": 0.3,
+          "lateness": 10.6
+        },
+        {
+          "at": 6.4,
+          "timestamp": 6.3,
+          "gap": 6.1,
+          "lateness": 0.1
+        },
+        {
+          "at": 23.1,
+          "timestamp": 23,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 40,
+          "timestamp": 39.7,
+          "gap": 16.9,
+          "lateness": 0.3
+        },
+        {
+          "at": 57.3,
+          "timestamp": 55.7,
+          "gap": 17.3,
+          "lateness": 1.6
+        },
+        {
+          "at": 73.5,
+          "timestamp": 73,
+          "gap": 16.2,
+          "lateness": 0.5
+        },
+        {
+          "at": 90.3,
+          "timestamp": 89.6,
+          "gap": 16.8,
+          "lateness": 0.7
+        },
+        {
+          "at": 107.5,
+          "timestamp": 105.4,
+          "gap": 17.2,
+          "lateness": 2.1
+        },
+        {
+          "at": 123.7,
+          "timestamp": 123,
+          "gap": 16.2,
+          "lateness": 0.7
+        },
+        {
+          "at": 140.2,
+          "timestamp": 139.6,
+          "gap": 16.5,
+          "lateness": 0.6
+        },
+        {
+          "at": 156.5,
+          "timestamp": 156.2,
+          "gap": 16.3,
+          "lateness": 0.3
+        },
+        {
+          "at": 173.4,
+          "timestamp": 173,
+          "gap": 16.9,
+          "lateness": 0.4
+        },
+        {
+          "at": 190.1,
+          "timestamp": 189.6,
+          "gap": 16.7,
+          "lateness": 0.5
+        },
+        {
+          "at": 206.9,
+          "timestamp": 206.3,
+          "gap": 16.8,
+          "lateness": 0.6
+        },
+        {
+          "at": 223.6,
+          "timestamp": 223,
+          "gap": 16.7,
+          "lateness": 0.6
+        },
+        {
+          "at": 240.2,
+          "timestamp": 239.5,
+          "gap": 16.6,
+          "lateness": 0.7
+        },
+        {
+          "at": 256.8,
+          "timestamp": 255.8,
+          "gap": 16.6,
+          "lateness": 1
+        },
+        {
+          "at": 273.3,
+          "timestamp": 272.8,
+          "gap": 16.5,
+          "lateness": 0.5
+        },
+        {
+          "at": 290.6,
+          "timestamp": 289.7,
+          "gap": 17.3,
+          "lateness": 0.9
+        },
+        {
+          "at": 306.9,
+          "timestamp": 306.3,
+          "gap": 16.3,
+          "lateness": 0.6
+        },
+        {
+          "at": 324.2,
+          "timestamp": 322.1,
+          "gap": 17.3,
+          "lateness": 2.1
+        },
+        {
+          "at": 339.8,
+          "timestamp": 339.6,
+          "gap": 15.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 356.8,
+          "timestamp": 356.3,
+          "gap": 17,
+          "lateness": 0.5
+        },
+        {
+          "at": 373.8,
+          "timestamp": 373,
+          "gap": 17,
+          "lateness": 0.8
+        },
+        {
+          "at": 389.7,
+          "timestamp": 389.6,
+          "gap": 15.9,
+          "lateness": 0.1
+        },
+        {
+          "at": 406.8,
+          "timestamp": 406.3,
+          "gap": 17.1,
+          "lateness": 0.5
+        },
+        {
+          "at": 423.7,
+          "timestamp": 423,
+          "gap": 16.9,
+          "lateness": 0.7
+        },
+        {
+          "at": 440.3,
+          "timestamp": 439.6,
+          "gap": 16.6,
+          "lateness": 0.7
+        },
+        {
+          "at": 456.6,
+          "timestamp": 456.1,
+          "gap": 16.3,
+          "lateness": 0.5
+        },
+        {
+          "at": 473.3,
+          "timestamp": 472.9,
+          "gap": 16.7,
+          "lateness": 0.4
+        },
+        {
+          "at": 490.4,
+          "timestamp": 489.4,
+          "gap": 17.1,
+          "lateness": 1
+        },
+        {
+          "at": 506.5,
+          "timestamp": 506.3,
+          "gap": 16.1,
+          "lateness": 0.2
+        },
+        {
+          "at": 523.1,
+          "timestamp": 523,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 540.7,
+          "timestamp": 539.1,
+          "gap": 17.6,
+          "lateness": 1.6
+        },
+        {
+          "at": 556.4,
+          "timestamp": 555.4,
+          "gap": 15.7,
+          "lateness": 1
+        },
+        {
+          "at": 573.1,
+          "timestamp": 572.9,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 589.9,
+          "timestamp": 589.6,
+          "gap": 16.8,
+          "lateness": 0.3
+        },
+        {
+          "at": 607.3,
+          "timestamp": 606.1,
+          "gap": 17.4,
+          "lateness": 1.2
+        },
+        {
+          "at": 623.1,
+          "timestamp": 622.9,
+          "gap": 15.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 639.8,
+          "timestamp": 639.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 656.6,
+          "timestamp": 656.2,
+          "gap": 16.8,
+          "lateness": 0.4
+        },
+        {
+          "at": 673.2,
+          "timestamp": 672.9,
+          "gap": 16.6,
+          "lateness": 0.3
+        },
+        {
+          "at": 689.8,
+          "timestamp": 689.6,
+          "gap": 16.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 706.5,
+          "timestamp": 706.3,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 723.1,
+          "timestamp": 722.9,
+          "gap": 16.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 739.8,
+          "timestamp": 739.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 756.4,
+          "timestamp": 756.3,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 773.1,
+          "timestamp": 772.9,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 789.8,
+          "timestamp": 789.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 806.5,
+          "timestamp": 806.3,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 823.2,
+          "timestamp": 823,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 839.9,
+          "timestamp": 839.6,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 856.6,
+          "timestamp": 856.3,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 873.2,
+          "timestamp": 872.9,
+          "gap": 16.6,
+          "lateness": 0.3
+        },
+        {
+          "at": 889.9,
+          "timestamp": 889.6,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 907.3,
+          "timestamp": 905.3,
+          "gap": 17.4,
+          "lateness": 2
+        },
+        {
+          "at": 922.4,
+          "timestamp": 922.2,
+          "gap": 15.1,
+          "lateness": 0.2
+        },
+        {
+          "at": 939.4,
+          "timestamp": 939.2,
+          "gap": 17,
+          "lateness": 0.2
+        },
+        {
+          "at": 956.6,
+          "timestamp": 956.2,
+          "gap": 17.2,
+          "lateness": 0.4
+        },
+        {
+          "at": 973.1,
+          "timestamp": 972.9,
+          "gap": 16.5,
+          "lateness": 0.2
+        },
+        {
+          "at": 989.8,
+          "timestamp": 989.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1006.5,
+          "timestamp": 1006.1,
+          "gap": 16.7,
+          "lateness": 0.4
+        },
+        {
+          "at": 1023.5,
+          "timestamp": 1023,
+          "gap": 17,
+          "lateness": 0.5
+        },
+        {
+          "at": 1042.1,
+          "timestamp": 1039.6,
+          "gap": 18.6,
+          "lateness": 2.5
+        },
+        {
+          "at": 1057.6,
+          "timestamp": 1055.3,
+          "gap": 15.5,
+          "lateness": 2.3
+        },
+        {
+          "at": 1073.7,
+          "timestamp": 1072.9,
+          "gap": 16.1,
+          "lateness": 0.8
+        },
+        {
+          "at": 1090.3,
+          "timestamp": 1089.6,
+          "gap": 16.6,
+          "lateness": 0.7
+        },
+        {
+          "at": 1106.6,
+          "timestamp": 1106.3,
+          "gap": 16.3,
+          "lateness": 0.3
+        },
+        {
+          "at": 1123.4,
+          "timestamp": 1123,
+          "gap": 16.8,
+          "lateness": 0.4
+        },
+        {
+          "at": 1140,
+          "timestamp": 1139.5,
+          "gap": 16.6,
+          "lateness": 0.5
+        },
+        {
+          "at": 1157.2,
+          "timestamp": 1156.3,
+          "gap": 17.2,
+          "lateness": 0.9
+        },
+        {
+          "at": 1174,
+          "timestamp": 1172.9,
+          "gap": 16.8,
+          "lateness": 1.1
+        },
+        {
+          "at": 1189.9,
+          "timestamp": 1189.5,
+          "gap": 15.9,
+          "lateness": 0.4
+        },
+        {
+          "at": 1206.5,
+          "timestamp": 1206.2,
+          "gap": 16.6,
+          "lateness": 0.3
+        },
+        {
+          "at": 1223.3,
+          "timestamp": 1223,
+          "gap": 16.8,
+          "lateness": 0.3
+        },
+        {
+          "at": 1239.9,
+          "timestamp": 1239.6,
+          "gap": 16.6,
+          "lateness": 0.3
+        },
+        {
+          "at": 1256.6,
+          "timestamp": 1256.3,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 1274,
+          "timestamp": 1272.8,
+          "gap": 17.4,
+          "lateness": 1.2
+        },
+        {
+          "at": 1289.9,
+          "timestamp": 1289.6,
+          "gap": 15.9,
+          "lateness": 0.3
+        },
+        {
+          "at": 1306.5,
+          "timestamp": 1306.2,
+          "gap": 16.6,
+          "lateness": 0.3
+        },
+        {
+          "at": 1323.2,
+          "timestamp": 1322.9,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 1339.9,
+          "timestamp": 1339.6,
+          "gap": 16.7,
+          "lateness": 0.3
+        },
+        {
+          "at": 1356.5,
+          "timestamp": 1356.3,
+          "gap": 16.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 1373.3,
+          "timestamp": 1372.9,
+          "gap": 16.8,
+          "lateness": 0.4
+        },
+        {
+          "at": 1390.1,
+          "timestamp": 1389.6,
+          "gap": 16.8,
+          "lateness": 0.5
+        },
+        {
+          "at": 1407.4,
+          "timestamp": 1406,
+          "gap": 17.3,
+          "lateness": 1.4
+        },
+        {
+          "at": 1423.2,
+          "timestamp": 1422.9,
+          "gap": 15.8,
+          "lateness": 0.3
+        },
+        {
+          "at": 1439.7,
+          "timestamp": 1439.6,
+          "gap": 16.5,
+          "lateness": 0.1
+        },
+        {
+          "at": 1456.5,
+          "timestamp": 1456.3,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 1473,
+          "timestamp": 1472.9,
+          "gap": 16.5,
+          "lateness": 0.1
+        },
+        {
+          "at": 1489.7,
+          "timestamp": 1489.6,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 1506.4,
+          "timestamp": 1506.3,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 1523.1,
+          "timestamp": 1522.9,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1539.8,
+          "timestamp": 1539.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1556.5,
+          "timestamp": 1556.3,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1573.1,
+          "timestamp": 1572.9,
+          "gap": 16.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 1589.6,
+          "timestamp": 1589.6,
+          "gap": 16.5,
+          "lateness": 0
+        },
+        {
+          "at": 1606.4,
+          "timestamp": 1606.2,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 1623,
+          "timestamp": 1622.9,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 1640.7,
+          "timestamp": 1638.8,
+          "gap": 17.7,
+          "lateness": 1.9
+        },
+        {
+          "at": 1656.5,
+          "timestamp": 1656.3,
+          "gap": 15.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 1673.9,
+          "timestamp": 1672.7,
+          "gap": 17.4,
+          "lateness": 1.2
+        },
+        {
+          "at": 1689.7,
+          "timestamp": 1689.6,
+          "gap": 15.8,
+          "lateness": 0.1
+        },
+        {
+          "at": 1706.3,
+          "timestamp": 1706.3,
+          "gap": 16.6,
+          "lateness": 0
+        },
+        {
+          "at": 1723,
+          "timestamp": 1723,
+          "gap": 16.7,
+          "lateness": 0
+        },
+        {
+          "at": 1739.6,
+          "timestamp": 1739.6,
+          "gap": 16.6,
+          "lateness": 0
+        },
+        {
+          "at": 1756.4,
+          "timestamp": 1756.2,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 1772.9,
+          "timestamp": 1772.9,
+          "gap": 16.5,
+          "lateness": 0
+        },
+        {
+          "at": 1789.6,
+          "timestamp": 1789.6,
+          "gap": 16.7,
+          "lateness": 0
+        },
+        {
+          "at": 1807.3,
+          "timestamp": 1806.1,
+          "gap": 17.7,
+          "lateness": 1.2
+        },
+        {
+          "at": 1823.1,
+          "timestamp": 1822.9,
+          "gap": 15.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 1839.7,
+          "timestamp": 1839.5,
+          "gap": 16.6,
+          "lateness": 0.2
+        },
+        {
+          "at": 1856.4,
+          "timestamp": 1856.3,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 1873.6,
+          "timestamp": 1872.9,
+          "gap": 17.2,
+          "lateness": 0.7
+        },
+        {
+          "at": 1889.8,
+          "timestamp": 1889.6,
+          "gap": 16.2,
+          "lateness": 0.2
+        },
+        {
+          "at": 1906.4,
+          "timestamp": 1906.3,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 1923.1,
+          "timestamp": 1922.9,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1940.6,
+          "timestamp": 1939.1,
+          "gap": 17.5,
+          "lateness": 1.5
+        },
+        {
+          "at": 1956.4,
+          "timestamp": 1956.3,
+          "gap": 15.8,
+          "lateness": 0.1
+        },
+        {
+          "at": 1973.1,
+          "timestamp": 1972.9,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 1989.7,
+          "timestamp": 1989.6,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2006.4,
+          "timestamp": 2006.2,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 2023.1,
+          "timestamp": 2023,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2039.7,
+          "timestamp": 2039.6,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2056.4,
+          "timestamp": 2056.3,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2074,
+          "timestamp": 2072.8,
+          "gap": 17.6,
+          "lateness": 1.2
+        },
+        {
+          "at": 2089.6,
+          "timestamp": 2089.5,
+          "gap": 15.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2106.4,
+          "timestamp": 2106.2,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 2123.2,
+          "timestamp": 2122.9,
+          "gap": 16.8,
+          "lateness": 0.3
+        },
+        {
+          "at": 2139.7,
+          "timestamp": 2139.6,
+          "gap": 16.5,
+          "lateness": 0.1
+        },
+        {
+          "at": 2156.4,
+          "timestamp": 2156.3,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2173,
+          "timestamp": 2172.9,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2189.6,
+          "timestamp": 2189.6,
+          "gap": 16.6,
+          "lateness": 0
+        },
+        {
+          "at": 2206.3,
+          "timestamp": 2206.2,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2223.1,
+          "timestamp": 2222.9,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 2239.8,
+          "timestamp": 2239.6,
+          "gap": 16.7,
+          "lateness": 0.2
+        },
+        {
+          "at": 2256.3,
+          "timestamp": 2256.3,
+          "gap": 16.5,
+          "lateness": 0
+        },
+        {
+          "at": 2273.1,
+          "timestamp": 2272.9,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 2289.7,
+          "timestamp": 2289.6,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2306.4,
+          "timestamp": 2306.3,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2323,
+          "timestamp": 2322.9,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2339.7,
+          "timestamp": 2339.6,
+          "gap": 16.7,
+          "lateness": 0.1
+        },
+        {
+          "at": 2356.5,
+          "timestamp": 2356.3,
+          "gap": 16.8,
+          "lateness": 0.2
+        },
+        {
+          "at": 2373.1,
+          "timestamp": 2373,
+          "gap": 16.6,
+          "lateness": 0.1
+        },
+        {
+          "at": 2422.9,
+          "timestamp": 2406.2,
+          "gap": 49.8,
+          "lateness": 16.7
+        },
+        {
+          "at": 2425,
+          "timestamp": 2422.9,
+          "gap": 2.1,
+          "lateness": 2.1
+        },
+        {
+          "at": 2439.9,
+          "timestamp": 2439.6,
+          "gap": 14.9,
+          "lateness": 0.3
+        },
+        {
+          "at": 2460.7,
+          "timestamp": 2456.3,
+          "gap": 20.8,
+          "lateness": 4.4
+        },
+        {
+          "at": 2473.1,
+          "timestamp": 2472.9,
+          "gap": 12.4,
+          "lateness": 0.2
+        }
+      ],
+      "phases": [],
+      "ready": "complete",
+      "fonts": "loaded",
+      "visibility": "visible",
+      "idle": true,
+      "end": 4053.7999999970198,
+      "duration": 2502.5,
+      "callbacks": [],
+      "work": [],
+      "attention": [
+        {
+          "name": "begin",
+          "at": 1551.5,
+          "visibility": "visible"
+        }
+      ],
+      "resources": []
+    }
+  ]
+}

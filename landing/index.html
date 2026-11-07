@@ -6,33 +6,34 @@
     <meta name="description" content="DuckPlan is a calm, task-first student planner that keeps deadlines and study time together." />
     <meta name="theme-color" content="#f8c943" />
     <link rel="icon" type="image/png" href="./assets/duckplan-mascot-v8.png" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=calendar-drag-1" />
     <title>DuckPlan | Tasks and time together</title>
   </head>
-  <body>
+  <body class="planner-glass">
     <div class="app-shell unified-shell">
       <aside class="sidebar" id="planner-sidebar">
         <a class="brand" href="#home" data-go="home" aria-label="DuckPlan home"><span class="brand-mark"><img src="./assets/duckplan-mascot-v8.png" alt="" /></span><span>DuckPlan</span></a>
-        <button class="drawer-close" type="button" aria-label="Close navigation">×</button>
+        <p class="sidebar-section-label">Planner</p>
         <nav class="primary-nav" aria-label="Planner navigation">
           <button class="nav-item active" type="button" data-view="home"><span class="nav-icon" aria-hidden="true">⌂</span><span>Home</span></button>
           <button class="nav-item" type="button" data-view="tasks"><span class="nav-icon" aria-hidden="true">✓</span><span>All tasks</span><span class="nav-count" id="task-count">0</span></button>
           <button class="nav-item" type="button" data-view="classes"><span class="nav-icon" aria-hidden="true">◫</span><span>Classes</span></button>
           <button class="nav-item" type="button" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></button>
         </nav>
-        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Not signed in</p></div><button type="button" id="sync-info" aria-label="Set up Axis sync">↻</button></section>
+        <section class="sync-card" aria-label="Axis connection status"><div class="sync-icon" aria-hidden="true">↻</div><div><p class="sync-title">Axis sync</p><p class="sync-copy">Prototype mode</p></div><button type="button" id="sync-info" aria-label="Learn about Axis sync">i</button></section>
         <div class="sidebar-spacer"></div>
         <button class="profile-card" type="button" data-go="settings" aria-label="Open Bobby's settings"><span class="avatar" aria-hidden="true">BZ</span><span><strong>Bobby</strong><small>Student account</small></span><span aria-hidden="true">›</span></button>
       </aside>
+      <div class="sidebar-toggle-dock"><button class="sidebar-edge-toggle" type="button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" aria-expanded="false"><span data-sidebar-glyph aria-hidden="true">›</span></button></div>
       <button class="sidebar-scrim" type="button" aria-label="Close navigation" tabindex="-1" hidden></button>
 
       <main class="workspace unified-workspace">
         <header class="topbar compact-topbar">
-          <div class="topbar-title"><a class="nav-open-button topbar-nav-open-button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" href="#planner-sidebar">☰</a><div><p class="eyebrow" id="page-eyebrow">Task-first planner</p><h1 id="page-title">Home</h1></div></div>
+          <div class="topbar-title"><div><p class="eyebrow" id="page-eyebrow">Task-first planner</p><h1 id="page-title">Home</h1></div></div>
           <div class="topbar-actions">
             <label class="search-box"><span aria-hidden="true">⌕</span><span class="sr-only">Search tasks</span><input id="global-search" type="search" placeholder="Search your planner" autocomplete="off" /></label>
-            <button class="icon-button" type="button" id="notification-button" aria-label="Notifications"><span aria-hidden="true">♢</span><span class="notification-dot"></span></button>
-            <button class="primary-button" type="button" id="open-task-modal" data-fur-button>＋ Add task</button>
+            <button class="icon-button" type="button" id="notification-button" aria-label="Open deadline reminder settings" title="Deadline reminders"><span aria-hidden="true">◷</span></button>
+            <button class="primary-button" type="button" id="open-task-modal">＋ Add task</button>
           </div>
         </header>
 
@@ -42,60 +43,102 @@
             <div class="completion-ring" id="completion-ring" aria-label="Daily completion"><strong id="completion-percent">0%</strong><span>done</span></div>
           </header>
           <div class="planner-workspace">
-            <section class="panel daily-panel" aria-labelledby="daily-plan-heading">
-              <div class="panel-heading"><div><p class="section-kicker">Tasks</p><h2 id="daily-plan-heading">Today</h2><p class="panel-date" id="daily-panel-date"></p><p class="panel-progress" id="daily-panel-progress"></p></div><a class="nav-open-button home-nav-open-button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" href="#planner-sidebar">☰</a><button type="button" class="secondary-button compact-button" id="plan-selected-date">＋ Add task</button></div>
+            <aside class="panel daily-panel task-sidebar-panel" id="daily-task-panel" aria-labelledby="daily-plan-heading">
+              <div class="panel-heading"><div class="task-sidebar-heading"><button class="nav-open-button task-sidebar-menu-button" type="button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span></button><div><p class="section-kicker">Tasks</p><h2 id="daily-plan-heading">Today</h2><p class="panel-date" id="daily-panel-date"></p><p class="panel-progress" id="daily-panel-progress"></p></div></div><button type="button" class="secondary-button compact-button" id="plan-selected-date">＋ Add task</button><button type="button" class="task-panel-close-button" data-close-task-panel aria-label="Close tasks">×</button></div>
               <div class="task-section overdue-section" id="overdue-section"><button class="task-section-heading" type="button" aria-expanded="true" data-collapse="overdue"><span><span class="status-dot overdue-dot"></span>Overdue</span><strong id="overdue-count">0</strong></button><div class="daily-task-list" id="overdue-task-list"></div></div>
               <div class="task-section"><div class="task-section-heading static"><span><span class="status-dot scheduled-dot"></span>Scheduled</span><strong id="scheduled-count">0</strong></div><div class="daily-task-list" id="scheduled-task-list"></div></div>
               <div class="task-section"><div class="task-section-heading static"><span><span class="status-dot due-dot"></span>Due, not scheduled</span><strong id="unscheduled-count">0</strong></div><div class="daily-task-list" id="unscheduled-task-list"></div></div>
               <div class="task-section completed-section"><button class="task-section-heading" type="button" aria-expanded="true" data-collapse="completed"><span><span class="status-dot completed-dot"></span>Completed</span><strong id="completed-count">0</strong></button><div class="daily-task-list" id="completed-task-list"></div></div>
               <div class="daily-empty" id="daily-empty" hidden><img src="./assets/duckplan-mascot-v8.png" alt="" /><h3>Clear day ahead.</h3><p>Click a calendar slot or plan a task when you are ready.</p></div>
-            </section>
-            <section class="panel unified-calendar-panel" aria-labelledby="calendar-heading">
+            </aside>
+            <section class="panel unified-calendar-panel calendar-main-panel" aria-labelledby="calendar-heading">
               <div class="calendar-toolbar">
-                <div><p class="section-kicker">Schedule</p><h2 id="calendar-heading">Calendar</h2><p class="calendar-range" id="calendar-range"></p></div>
+                <div class="calendar-toolbar-primary">
+                  <button class="nav-open-button calendar-nav-button" type="button" data-open-navigation aria-label="Open navigation" aria-controls="planner-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span></button>
+                  <button type="button" class="secondary-button compact-button calendar-today-button" id="calendar-today">Today</button>
+                  <div class="calendar-stepper" aria-label="Move calendar"><button type="button" id="calendar-previous" aria-label="Previous period"><span aria-hidden="true">‹</span></button><button type="button" id="calendar-next" aria-label="Next period"><span aria-hidden="true">›</span></button></div>
+                  <div class="calendar-title-copy"><h2 id="calendar-heading">Calendar</h2><p class="calendar-range" id="calendar-range"></p></div>
+                </div>
                 <div class="calendar-toolbar-actions">
-                  <button type="button" class="secondary-button compact-button" id="calendar-today">Today</button>
-                  <div class="calendar-stepper" aria-label="Move calendar"><button type="button" id="calendar-previous" aria-label="Previous period">←</button><button type="button" id="calendar-next" aria-label="Next period">→</button></div>
+                  <button type="button" class="secondary-button compact-button task-panel-toggle" id="toggle-task-panel" aria-controls="daily-task-panel" aria-expanded="false">Tasks</button>
                   <div class="view-switcher" role="group" aria-label="Calendar view"><button type="button" data-calendar-view="day" aria-pressed="false">Day</button><button type="button" data-calendar-view="week" aria-pressed="true">Week</button><button type="button" data-calendar-view="month" aria-pressed="false">Month</button></div>
                 </div>
               </div>
-              <div class="calendar-legend" aria-label="Calendar legend"><span><i class="legend-block"></i>Scheduled work</span><span><i class="legend-deadline"></i>Due deadline</span></div>
-              <div id="planner-calendar" class="planner-calendar" aria-live="polite"></div>
+              <p class="sr-only" id="calendar-status" role="status" aria-live="polite"></p>
+              <p class="sr-only" id="calendar-drag-instructions">Drag scheduled work to another day or time. Keyboard users can hold Alt and use the arrow keys to reschedule in 15-minute steps.</p>
+              <div id="planner-calendar" class="planner-calendar"></div>
             </section>
           </div>
+          <button class="task-panel-scrim" type="button" data-close-task-panel aria-label="Close tasks" hidden></button>
         </section>
 
         <section class="view" id="view-tasks" data-page-title="All tasks" data-eyebrow="Advanced task view"><section class="panel tasks-panel">
           <div class="panel-heading task-heading"><div><p class="section-kicker">Everything in one place</p><h2>All tasks</h2></div><div class="filter-row" role="group" aria-label="Filter tasks"><button class="filter-chip active" type="button" data-filter="all" aria-pressed="true">All</button><button class="filter-chip" type="button" data-filter="today" aria-pressed="false">Today</button><button class="filter-chip" type="button" data-filter="upcoming" aria-pressed="false">Upcoming</button><button class="filter-chip" type="button" data-filter="done" aria-pressed="false">Done</button></div></div>
           <div class="task-list expanded" id="all-task-list"></div><div class="empty-state" id="task-empty" hidden><img src="./assets/duckplan-mascot-v8.png" alt="" /><h3>Nothing here yet.</h3><p>Try another filter or add a new task.</p></div>
         </section></section>
-        <section class="view" id="view-classes" data-page-title="Classes" data-eyebrow="Keep every class sorted"><div class="classes-toolbar"><button type="button" class="secondary-button" id="add-class">＋ Add class</button></div><div class="class-grid" id="class-grid"></div></section>
+        <section class="view" id="view-classes" data-page-title="Classes" data-eyebrow="Keep every class sorted"><div class="class-grid" id="class-grid"></div></section>
         <section class="view" id="view-settings" data-page-title="Settings" data-eyebrow="Make DuckPlan yours"><section class="panel settings-panel">
           <div id="account-settings" class="settings-group"></div>
           <div id="axis-settings" class="settings-group"></div>
-          <div class="settings-row"><div><h2>Reminders</h2><p>Get a nudge before important assignments are due.</p></div><label class="switch"><input type="checkbox" checked /><span></span><span class="sr-only">Enable reminders</span></label></div>
-          <div class="settings-row"><div><h2>Interactive fur lab</h2><p>Inspect DuckPlan's approved procedural duck-down material.</p></div><a class="secondary-button" href="./fur-lab.html">Open material lab</a></div>
-          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset the tasks saved in this browser without affecting any account.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
+          <section class="settings-row" id="deadline-reminders" aria-labelledby="reminders-heading">
+            <div>
+              <h2 id="reminders-heading" tabindex="-1">Deadline reminders</h2>
+              <p>Set the default for tasks without a custom reminder. Deadlines without a time use 11:59 PM local time.</p>
+              <p class="notification-help">DuckPlan shows an in-app alert while you are using it. With permission, it can submit a device notification while this page remains open in the background. Closed-app, offline, and alarm delivery are not included yet.</p>
+              <p id="reminders-empty"></p>
+              <ul id="reminder-list"></ul>
+            </div>
+            <div class="reminder-options">
+              <label><input type="checkbox" id="reminders-enabled" /> Enable reminders by default</label>
+              <label for="reminder-lead">Remind me</label>
+              <select id="reminder-lead">
+                <option value="15">15 minutes before</option>
+                <option value="60">1 hour before</option>
+                <option value="1440">1 day before</option>
+              </select>
+              <div class="notification-permission">
+                <span>Device notifications</span>
+                <strong id="notification-permission-status" data-state="default" role="status" aria-live="polite" aria-atomic="true">Checking…</strong>
+              </div>
+              <button type="button" class="secondary-button notification-permission-button" id="enable-device-notifications" aria-describedby="notification-permission-help">Allow device notifications</button>
+              <small id="notification-permission-help" role="note">Your browser will ask before DuckPlan can notify you.</small>
+            </div>
+          </section>
+          <div class="settings-row"><div><h2>Interactive fur lab</h2><p>Saved fur checkpoint — available for future experiments.</p></div><a class="secondary-button" href="./fur-lab.html">Open material lab</a></div>
+          <div class="settings-row"><div><h2>Local demo data</h2><p>Reset tasks saved in this browser without affecting a signed-in account.</p></div><button type="button" class="secondary-button" id="reset-demo">Reset demo</button></div>
         </section></section>
       </main>
     </div>
 
-    <dialog class="task-modal" id="task-modal"><form method="dialog" id="task-form">
+    <dialog class="task-modal" id="task-modal" tabindex="-1" aria-labelledby="modal-title"><form method="dialog" id="task-form">
       <div class="modal-heading"><div><p class="section-kicker" id="modal-kicker">Plan your work</p><h2 id="modal-title">New task</h2></div><button class="close-button" type="button" id="close-task-modal" aria-label="Close">×</button></div>
       <label>Task name<input name="title" required maxlength="80" placeholder="What needs to get done?" /></label>
       <div class="form-grid"><label>Class<select name="classId"></select></label><label>Priority<select name="priority"><option>Medium</option><option>High</option><option>Low</option></select></label></div>
-      <fieldset class="form-section"><legend>Deadline</legend><p>When this must be finished.</p><div class="form-grid"><label>Due date<input name="dueDate" type="date" /></label><label>Due time<input name="dueTime" type="time" /></label></div></fieldset>
+      <fieldset class="form-section">
+        <legend>Deadline</legend>
+        <p>When this must be finished. Reminders need a due date. Device notifications require permission and are only submitted while DuckPlan remains open.</p>
+        <div class="form-grid">
+          <label>Due date<input name="dueDate" type="date" /></label>
+          <label>Due time<input name="dueTime" type="time" /></label>
+          <label>Deadline reminder<select name="reminderChoice">
+            <option value="default">Use Settings default</option>
+            <option value="off">No reminder</option>
+            <option value="15">15 minutes before</option>
+            <option value="60">1 hour before</option>
+            <option value="1440">1 day before</option>
+          </select></label>
+        </div>
+      </fieldset>
       <fieldset class="form-section"><legend>Scheduled work</legend><p>When you plan to work on it. This is independent from the deadline.</p><div class="form-grid schedule-grid"><label>Work date<input name="scheduledDate" type="date" /></label><label>Start time<input name="scheduledTime" type="time" /></label><label>Duration<select name="durationMinutes"><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option></select></label></div></fieldset>
+      <fieldset class="form-section">
+        <legend>Actual time spent</legend>
+        <p>Log the total time you worked on this task. It saves on this device.</p>
+        <label>Minutes spent<input name="actualMinutes" type="number" min="0" max="10080" step="1" inputmode="numeric" /></label>
+        <p id="class-time-estimate">Class average becomes available when shared Axis assignment data is connected.</p>
+      </fieldset>
       <div class="modal-actions"><button class="danger-button" type="button" id="delete-task" hidden>Delete</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-task">Cancel</button><button class="primary-button" type="submit" id="save-task">Add to DuckPlan</button></div>
     </form></dialog>
-    <dialog class="task-modal class-modal" id="class-modal"><form method="dialog" id="class-form">
-      <div class="modal-heading"><div><p class="section-kicker">Classes</p><h2 id="class-modal-title">New class</h2></div><button class="close-button" type="button" id="close-class-modal" aria-label="Close">×</button></div>
-      <label>Class name<input name="name" required maxlength="120" placeholder="Physics I (AP)" /></label>
-      <div class="form-grid"><label>Teacher<input name="teacher" maxlength="80" placeholder="Dr. Shah" /></label><label>Period<input name="period" maxlength="40" placeholder="Period 5" /></label></div>
-      <div class="form-grid"><label>Short label<input name="code" maxlength="3" placeholder="P" /></label><label>Color<input name="color" type="color" value="#538fc5" /></label></div>
-      <div class="modal-actions"><button class="danger-button" type="button" id="archive-class" hidden>Archive</button><span class="modal-spacer"></span><button class="secondary-button" type="button" id="cancel-class">Cancel</button><button class="primary-button" type="submit">Save class</button></div>
-    </form></dialog>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./planner-model.js"></script><script src="./ical-parser.js"></script><script src="./cloud-config.js"></script><script src="./planner-store.js?v=20261105-password-1"></script><script src="./fur-material.js"></script><script src="./button-interactions.js"></script><script src="./app.js?v=20261105-password-1"></script>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-message"></span><button type="button" id="toast-action" hidden></button></div>
+    <script src="./planner-model.js"></script><script src="./planner-ui.js?v=calendar-drag-1"></script><script src="./ical-parser.js"></script><script src="./cloud-config.js"></script><script src="./planner-store.js?v=20261106-glass-1"></script><script src="./reminder-domain.js?v=2"></script><script src="./reminder-ledger.js?v=2"></script><script src="./browser-notifications.js?v=2"></script><script src="./motion-tokens.js?v=staged-1"></script><script src="./button-interactions.js?v=motion-1"></script><script src="./popup-motion.js?v=reverse-1"></script><script src="./app.js?v=20261106-glass-1"></script>
   </body>
 </html>

@@ -70,9 +70,91 @@
           <p class="fur-lab-note">Hover-brushed and pressed trails share the recovery delay: 2 seconds by default and up to 5 seconds. Production buttons use only fur for their silhouette and lettering: longer edge strands form the outline and darker label strands form the words. Pressing mats the center nearly flat before staggered recovery.</p>
         </form>
       </section>
+      <section class="wave-lab" id="wave-lab" aria-labelledby="wave-lab-heading">
+        <p class="section-kicker">Transition study · local prototype</p><h2 id="wave-lab-heading">A wave through the material</h2>
+        <p>Compare the unchanged material above with a traveling strand crest, a Start/Pause morph, and a fold across the workspace below. The left navigation stays stationary.</p>
+        <form id="wave-controls" class="wave-controls">
+          <label>Wave speed (px/s)<input name="waveSpeed" type="range" min="160" max="1200" step="20" value="540"><output></output></label>
+          <label>Wavefront width (px)<input name="waveWidth" type="range" min="6" max="55" value="22"><output></output></label>
+          <label>Radial bend<input name="waveBend" type="range" min="0" max="1" step=".05" value=".56"><output></output></label>
+          <label>Compression amplitude<input name="waveCompression" type="range" min="0" max=".65" step=".01" value=".22"><output></output></label>
+          <label>Recovery damping<input name="damping" type="range" min="18" max="40" value="22"><output></output></label>
+          <label>Fold intensity<input name="fold" type="range" min="0" max="1" step=".05" value=".55"><output></output></label>
+          <label>Workspace duration (ms)<input name="duration" type="range" min="450" max="650" step="10" value="560"><output></output></label>
+          <label>Reduced-motion preview<input name="reducedMotion" type="checkbox"></label>
+        </form>
+        <div class="wave-demo-actions">
+          <button type="button" class="primary-button" id="wave-ripple" data-transition="local">Local ripple</button>
+          <button type="button" class="primary-button" id="wave-morph" data-transition="morph" aria-pressed="false">Start</button>
+          <button type="button" class="secondary-button" id="wave-rapid">Rapid activation</button>
+          <button type="button" class="secondary-button" id="wave-reset">Reset waves</button>
+        </div>
+        <div class="wave-demo-shell">
+          <nav class="wave-demo-nav" aria-label="Transition demo navigation">
+            <button type="button" class="secondary-button" data-wave-page="tasks">Tasks</button>
+            <button type="button" class="secondary-button" data-wave-page="calendar">Calendar</button>
+          </nav>
+          <section class="wave-demo-workspace" id="wave-workspace" aria-live="polite"><h3>Tasks</h3><p>Your next study session, all in one place.</p><button class="secondary-button" type="button" id="wave-calendar-mode">Show week</button><div id="wave-calendar-content"><p>Today · Calculus practice · 3:30 PM</p></div></section>
+        </div>
+        <output class="wave-metrics" id="wave-metrics">Metrics appear after a workspace transition.</output>
+      </section>
+      <section class="wave-lab" id="sheet-lab" aria-labelledby="sheet-heading">
+        <p class="section-kicker">Experimental geometry · local review</p><p><a href="fur-physics-lab.html">Open the curved-strand A/B experiment →</a></p><h2 id="sheet-heading">Growing fur · rolling sheet</h2>
+        <p>One raised fur wave lays out the full sheet. First the fur takes on the destination UI colors while keeping its pile and strands. Then that colored fur lowers and compresses into the finished UI, with no second traveling wave. Leave Growth only unchecked. Diagnostics: blue growth edge · pink crest · red contact · violet radial center.</p>
+        <details open class="sheet-tuning"><summary>Geometry controls</summary><form class="wave-controls" id="sheet-controls">
+          <label>Fur growth speed<input name="growthSpeed" type="range" min=".5" max="2" step=".1" value="1"><output></output></label>
+          <label>Sheet thickness (px)<input name="thickness" type="range" min="1" max="12" value="5"><output></output></label>
+          <label>Crest elevation (px)<input name="elevation" type="range" min="20" max="140" value="64"><output></output></label>
+          <label>Fold curvature<input name="curvature" type="range" min=".3" max="1.4" step=".05" value=".7"><output></output></label>
+          <label>Fur density<input name="furDensity" type="range" min=".4" max="1.8" step=".1" value="1"><output></output></label>
+          <label>Fiber length (px)<input name="fiberLength" type="range" min="2" max="10" step=".5" value="5.5"><output></output></label>
+          <label>Wavefront width (px)<input name="sheetWidth" type="range" min="60" max="180" step="5" value="110"><output></output></label>
+          <label>Duration (ms)<input name="duration" type="range" min="600" max="1800" step="10" value="1000"><output></output></label>
+          <label>Lighting / shadow<input name="lighting" type="range" min=".2" max="1" step=".05" value=".8"><output></output></label>
+          <label>Inspect progress<input name="inspectProgress" type="range" min="0" max="1" step=".001" value=".42"><output></output></label>
+          <label>Origin / boundary diagnostics<input name="debug" type="checkbox"></label>
+          <label>Use rejected ribbon for in-workspace comparison<input name="ribbon" type="checkbox"></label>
+          <label>Growth only (no page reveal)<input name="growthOnly" type="checkbox"></label>
+          <label class="wave-checkbox"><input name="colorOnly" type="checkbox"> Previous color-only formation (a274285 behavior)</label>
+          <label>Previous integration (50de4ab)<input name="previousIntegration" type="checkbox"></label>
+          <label>Recovery hold<select name="responseDelay"><option value="0">0 ms</option><option value="280" selected>280 ms</option><option value="2000">2,000 ms</option><option value="5000">5,000 ms</option></select></label>
+          <label>Previous analytic recovery (a169d87)<input name="legacyRecovery" type="checkbox"></label>
+          <label>Inspect recovery age<input name="inspectRecovery" type="checkbox"></label>
+          <label>Held material age (ms)<input name="recoveryAge" type="range" min="0" max="8000" step="10" value="800"><output></output></label>
+          <label>Independent growth baseline<input name="independentGrowth" type="checkbox"></label>
+          <label>Previous fade handoff (comparison)<input name="legacyFade" type="checkbox"></label>
+          <label>Hold geometry pose<input name="hold" type="checkbox"></label>
+          <label>Record next playback (workspace composite)<input name="record" type="checkbox"></label>
+          <label>Simulate sheet context loss<input name="contextLoss" type="checkbox"></label>
+        </form></details>
+
+        <div class="wave-demo-actions">
+          <button type="button" class="secondary-button" id="sheet-ribbon">Rejected ribbon</button>
+          <button type="button" class="secondary-button" id="sheet-old">Previous radial mask</button>
+          <button type="button" class="primary-button" id="sheet-new">Grow furry sheet</button>
+          <button type="button" class="secondary-button" id="sheet-stress">Rapid sheet turns</button>
+          <button type="button" class="secondary-button" id="sheet-reset">Reset geometry</button>
+        </div>
+        <div class="sheet-example" id="sheet-workspace" aria-live="polite">
+          <div class="sheet-example-heading"><div><p class="section-kicker">Outgoing workspace</p><h3>Today’s study plan</h3></div><button class="primary-button" type="button" id="sheet-inside">Turn workspace</button></div>
+          <div class="sheet-example-cards"><article data-formation-surface><strong>Calculus</strong><p>Practice set · 3:30 PM</p></article><article data-formation-surface><strong>English</strong><p>Reading response · 6 PM</p></article><article data-formation-surface><strong>Physics</strong><p>Lab notes · tomorrow</p></article></div>
+        </div>
+        <div class="wave-demo-actions"><button type="button" class="secondary-button" id="sheet-press-hold">Hold press</button><button type="button" class="secondary-button" id="sheet-press-release">Just released</button><button type="button" class="secondary-button" id="sheet-crossing">First boundary crossing</button></div>
+        <pre id="sheet-response-traces" class="sheet-registration">Local response traces appear after a measured transition.</pre>
+        <pre id="sheet-continuity" class="sheet-registration" aria-live="polite">Press continuity measurements appear here.</pre>
+        <p>Set the recovery preset and optional material age before selecting a held frame. Scrolling cancels the temporary sheet to preserve the workspace viewport.</p>
+        <div id="sheet-frames" class="wave-demo-actions" aria-label="Hold animation frame"><button type="button" data-progress="0.0" class="secondary-button">0%</button><button type="button" data-progress="0.05" class="secondary-button">5%</button><button type="button" data-progress="0.1" class="secondary-button">10%</button><button type="button" data-progress="0.2" class="secondary-button">20%</button><button type="button" data-progress="0.35" class="secondary-button">35%</button><button type="button" data-progress="0.49" class="secondary-button">49%</button><button type="button" data-progress="0.51" class="secondary-button">51%</button><button type="button" data-progress="0.69" class="secondary-button">69%</button><button type="button" data-progress="0.71" class="secondary-button">71%</button><button type="button" data-progress="0.85" class="secondary-button">85%</button><button type="button" data-progress="0.97" class="secondary-button">97%</button><button type="button" data-progress="0.98" class="secondary-button">98%</button><button type="button" data-progress="0.99" class="secondary-button">99%</button><button type="button" data-progress="0.4" class="secondary-button">40%</button><button type="button" data-progress="0.5" class="secondary-button">50%</button><button type="button" data-progress="0.6" class="secondary-button">60%</button><button type="button" data-progress="0.7" class="secondary-button">70%</button><button type="button" data-progress="0.8" class="secondary-button">80%</button><button type="button" data-progress="0.9" class="secondary-button">90%</button><button type="button" data-progress="0.95" class="secondary-button">95%</button><button type="button" data-progress="1.0" class="secondary-button">100%</button></div>
+        <video id="sheet-video-baseline" aria-label="Baseline transition recording" controls hidden style="width:100%;max-height:420px"></video><a id="sheet-baseline-download" hidden>Save baseline recording</a>
+        <video id="sheet-video" aria-label="Refined transition recording" controls hidden style="width:100%;max-height:420px"></video><a id="sheet-video-download" hidden>Save workspace recording</a>
+        <output class="wave-metrics" id="sheet-metrics">Ready to inspect geometry.</output>
+      <details><summary>Layout registration measurements</summary><pre id="sheet-registration" class="sheet-registration"></pre></details>
+      </section>
     </main>
-    <script src="./fur-material.js"></script>
+    <script src="./fur-response.js?v=shared-response-1"></script><script src="./fur-dispersal.js?v=shared-response-1"></script><script src="./fur-material.js?v=shared-response-1"></script>
     <script src="./button-interactions.js"></script>
+    <script src="./fur-ribbon.js"></script><script src="./fur-sheet.js?v=shared-response-2"></script><script src="./formation-surface.js?v=shared-response-1"></script><script src="./material-transitions.js?v=shared-response-1"></script>
     <script src="./fur-lab.js"></script>
+    <script src="./wave-lab.js"></script>
+    <script src="./fur-recording.js?v=shared-response-1"></script><script src="./sheet-lab.js?v=shared-response-1"></script>
   </body>
 </html>

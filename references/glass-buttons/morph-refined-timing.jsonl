@@ -1,0 +1,4 @@
+{"phase":"open","result":"complete","wallMs":270.5,"samples":12,"medianMs":16.9,"p95Ms":34,"maxMs":34,"over25ms":3}
+{"phase":"close","result":"complete","wallMs":324.6,"samples":19,"medianMs":16.7,"p95Ms":17.5,"maxMs":17.5,"over25ms":0}
+{"phase":"open","result":"complete","wallMs":252.9,"samples":15,"medianMs":16.7,"p95Ms":16.9,"maxMs":16.9,"over25ms":0}
+{"phase":"close","result":"complete","wallMs":324.8,"samples":19,"medianMs":16.6,"p95Ms":16.8,"maxMs":16.8,"over25ms":0}

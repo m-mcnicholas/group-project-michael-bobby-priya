@@ -3,6 +3,11 @@
 
   const DEFAULTS = Object.freeze({
     quality: "medium",
+    waveSpeed: 540,
+    waveWidth: 22,
+    waveBend: 0.56,
+    waveCompression: 0.22,
+    waveEnabled: true,
     density: 1,
     length: 5.4,
     stiffness: 62,
@@ -48,6 +53,7 @@
   });
 
   const registry = new WeakMap();
+  const liveSurfaces = new Set();
   const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
   const smoothstep = (edge0, edge1, value) => {
     const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
@@ -119,6 +125,16 @@
     return linked;
   }
 
+  const CURVE_GLSL = `
+    vec2 furPath(float t,vec2 rest,vec2 bend,vec2 memory,float amount,float pressure){
+      float k=mix(0.38,3.781135,clamp(pressure*1.4,0.0,1.0));
+      return rest*t+bend*mix(t,t*t*(k+(1.0-k)*t),amount)+memory*t*t*(3.0-2.0*t);
+    }
+    vec2 furTangent(float t,vec2 rest,vec2 bend,vec2 memory,float amount,float pressure){
+      float k=mix(0.38,3.781135,clamp(pressure*1.4,0.0,1.0));
+      return rest+bend*mix(1.0,2.0*k*t+3.0*(1.0-k)*t*t,amount)+memory*6.0*t*(1.0-t);
+    }
+  `;
   const VERTEX_SHADER = `#version 300 es
     precision highp float;
     layout(location = 0) in vec2 a_corner;
@@ -127,6 +143,13 @@
     layout(location = 3) in vec4 a_state;
     layout(location = 4) in vec3 a_material;
 
+    uniform float u_curve,u_hasPile;
+    uniform sampler2D u_pileField;
+    ${CURVE_GLSL}
+    vec4 pileAt(vec2 uv){
+      ivec2 size=textureSize(u_pileField,0);vec2 p=clamp(uv*vec2(size)-0.5,vec2(0),vec2(size-1)),f=fract(p);ivec2 a=ivec2(floor(p)),b=min(a+1,size-1);
+      return mix(mix(texelFetch(u_pileField,a,0),texelFetch(u_pileField,ivec2(b.x,a.y),0),f.x),mix(texelFetch(u_pileField,ivec2(a.x,b.y),0),texelFetch(u_pileField,b,0),f.x),f.y);
+    }
     uniform vec2 u_canvasResolution;
     uniform vec2 u_surfaceResolution;
     uniform vec2 u_surfaceOffset;
@@ -150,8 +173,12 @@
     out vec2 v_surfaceUv;
 
     void main() {
+      float strandT=a_corner.y;
+      if(u_curve>0.0){float activity=length(a_state.xy)+a_state.z+a_state.w; if(u_hasPile>0.5)activity+=length(pileAt(a_root));strandT=mix(min(strandT*3.0,1.0),strandT,smoothstep(0.0,0.04,activity));}
       float compression = clamp(a_state.z, 0.0, 1.0);
       float depression = clamp(a_state.w, 0.0, 1.0);
+      vec4 pile=vec4(0.0);if(u_hasPile>0.5)pile=pileAt(a_root);
+      compression=clamp(compression+pile.z*0.5,0.0,1.0);depression=clamp(depression+pile.w*0.3,0.0,1.0);
       float labelFiber = clamp(a_material.x, 0.0, 1.0);
       float edgeFiber = clamp(a_material.y, 0.0, 1.0);
       float glyphBoundary = labelFiber * clamp(a_material.z, 0.0, 1.0);
@@ -167,13 +194,18 @@
       vec2 normal = vec2(-tangent.y, tangent.x);
       float rootWidth = mix(1.05, 1.5, a_seed.z) * u_dpr * mix(1.0, u_labelWidthScale, labelFiber) * mix(1.0, u_boundaryLabelWidthScale, glyphBoundary) * (1.0 + edgeFiber * 0.1 + compression * 0.3 + depression * 0.18);
       float tipWidth = rootWidth * mix(0.82, 1.68, compression);
-      float width = mix(rootWidth, tipWidth, a_corner.y);
+      float width = mix(rootWidth, tipWidth, strandT);
       vec2 rootPx = a_root * u_surfaceResolution + u_surfaceOffset;
-      vec2 pixel = rootPx + direction * a_corner.y + normal * a_corner.x * width;
+      vec2 pixel = rootPx + direction * strandT + normal * a_corner.x * width;
+      if(u_curve>0.0 || u_hasPile>0.5){
+        vec2 rest=naturalLean*heightScale,deflect=bend*mix(0.68,1.45,compression),memory=pile.xy*lengthPx*.85;
+        vec2 localTangent=furTangent(strandT,rest,deflect,memory,u_curve,compression);tangent=localTangent/max(length(localTangent),1.15*u_dpr);normal=vec2(-tangent.y,tangent.x);
+        pixel=rootPx+furPath(strandT,rest,deflect,memory,u_curve,compression)+normal*a_corner.x*width;
+      }
       vec2 clip = pixel / u_canvasResolution * 2.0 - 1.0;
       gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
 
-      v_height = a_corner.y;
+      v_height = strandT;
       v_side = a_corner.x;
       v_color = a_seed.z;
       v_compression = compression;
@@ -267,6 +299,7 @@
       this.pressed = false;
       this.activePointerId = null;
       this.hovered = false;
+      this.waves = [];
       this.pointer = { x: 0, y: 0, previousX: 0, previousY: 0, time: 0 };
       this.lastFrame = 0;
       this.frames = 0;
@@ -287,6 +320,7 @@
       this.onPointerLeave = this.onPointerLeave.bind(this);
       this.onKeyDown = this.onKeyDown.bind(this);
       this.onKeyUp = this.onKeyUp.bind(this);
+      this.onActivate = this.onActivate.bind(this);
       this.onVisibility = this.onVisibility.bind(this);
       this.onWindowBlur = this.onWindowBlur.bind(this);
       this.onMotionChange = this.onMotionChange.bind(this);
@@ -323,6 +357,7 @@
       this.host.addEventListener("pointerleave", this.onPointerLeave);
       this.host.addEventListener("keydown", this.onKeyDown);
       this.host.addEventListener("keyup", this.onKeyUp);
+      this.host.addEventListener("click", this.onActivate);
       document.addEventListener("visibilitychange", this.onVisibility);
       window.addEventListener("blur", this.onWindowBlur);
       this.canvas.addEventListener("webglcontextlost", this.onContextLost);
@@ -359,6 +394,12 @@
         this.glyphGuardStrengthLocation = this.gl.getUniformLocation(this.program, "u_glyphGuardStrength");
         this.motionGuardStartLocation = this.gl.getUniformLocation(this.program, "u_motionGuardStart");
         this.motionGuardEndLocation = this.gl.getUniformLocation(this.program, "u_motionGuardEnd");
+        this.curveLocation=this.gl.getUniformLocation(this.program,"u_curve");this.hasPileLocation=this.gl.getUniformLocation(this.program,"u_hasPile");this.pileFieldLocation=this.gl.getUniformLocation(this.program,"u_pileField");
+        if(this.options.experimentalStrands && window.DuckPile){
+          const gl=this.gl;this.pileTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.pileTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,32,16,0,gl.RGBA,gl.FLOAT,null);
+          for(const p of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,p,gl.NEAREST);
+          for(const p of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,p,gl.CLAMP_TO_EDGE);
+        }
         this.createBuffers();
         this.host.classList.remove("fur-static-fallback");
       } catch (error) {
@@ -373,10 +414,11 @@
       this.vertexArray = gl.createVertexArray();
       gl.bindVertexArray(this.vertexArray);
 
-      const corners = new Float32Array([
+      const corners = this.options.experimentalStrands && window.DuckPile ? window.DuckPile.corners(3) : new Float32Array([
         -1, 0, 1, 0, -1, 1,
         -1, 1, 1, 0, 1, 1,
       ]);
+      this.strandVertices=corners.length/2;
       this.cornerBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.cornerBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, corners, gl.STATIC_DRAW);
@@ -410,6 +452,7 @@
     }
 
     resize() {
+      this.waves = [];
       const rect = this.host.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
@@ -429,6 +472,7 @@
       this.canvas.height = layout.canvasHeight;
       this.width = width;
       this.height = height;
+      if (this.options.experimentalStrands && window.DuckPile && (!this.pileField || this.pileField.width!==this.width || this.pileField.height!==this.height))this.pileField=new window.DuckPile.PileField(this.width,this.height);
       if (this.gl) this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       this.rebuildFibers();
     }
@@ -721,7 +765,7 @@
       if (this.host.disabled) return;
       const point = this.localPointer(event);
       const elapsed = Math.max(8, event.timeStamp - this.pointer.time);
-      if (!this.reducedMotion.matches && (this.hovered || this.pressed)) {
+      if (!this.reducedMotion.matches && !this.options.reducedMotion && (this.hovered || this.pressed)) {
         this.brush(this.pointer.x, this.pointer.y, point.x, point.y, elapsed);
       }
       this.pointer = { ...point, previousX: this.pointer.x, previousY: this.pointer.y, time: event.timeStamp };
@@ -757,6 +801,7 @@
       const impulse = clamp(speed / 560, 0.12, 1) * this.options.brushStrength;
       const radius = this.interactionRadius(this.pressed);
       const recoveryDelay = Math.max(0, Number(this.options.recoveryDelay) || 0) / 1000;
+      if(this.pileField && !this.reducedMotion.matches && !this.options.reducedMotion){this.pileField.brush(fromX,fromY,toX,toY,radius,recoveryDelay,Number(this.options.pileMemory)||0);if(this.pressed)this.pileField.press(toX,toY,radius,recoveryDelay,Number(this.options.pileNeighbors)||0);}
       if (this.pressed) this.releaseActivePressFibers();
       for (let index = 0; index < this.count; index += 1) {
         const root = index * 2;
@@ -813,8 +858,24 @@
       }
     }
 
+    captureRestFrame() {
+      if(!this.gl || !this.state)return this.canvas.toDataURL();
+      const saved=this.state.slice();
+      try{this.state.fill(0);this.draw();return this.canvas.toDataURL();}
+      finally{this.state.set(saved);this.draw();}
+    }
+
+    captureDispersalState(record = {}) {
+      if(this.cancelledDispersal)return null;
+      const saved = this.releasedDispersal;
+      if (saved && performance.now()-saved.capturedAt < 1000) return Object.freeze({...saved, activationId:record.id??saved.activationId, modality:record.modality||saved.modality, contactAt:record.contactAt??saved.contactAt});
+      return window.DuckDispersal?.capture(this,record);
+    }
+
     onPointerDown(event) {
       if (this.host.disabled) return;
+      this.pressStartedAt=performance.now();this.pressRecord=window.DuckTransitions?.getContact?.(this.host);
+      this.cancelledDispersal=false;this.releasedDispersal = null;
       const point = this.localPointer(event);
       this.pointer = { ...point, previousX: point.x, previousY: point.y, time: event.timeStamp };
       this.pressed = true;
@@ -822,7 +883,7 @@
       this.releaseActivePressFibers();
       this.host.classList.add("fur-pressed");
       if (this.host.setPointerCapture) this.host.setPointerCapture(event.pointerId);
-      if (this.reducedMotion.matches) this.setReducedPress(true);
+      if (this.reducedMotion.matches || this.options.reducedMotion) this.setReducedPress(true);
       else if (this.gl) this.imprintPress();
       this.wake();
     }
@@ -832,6 +893,7 @@
     }
 
     onPointerCancel(event) {
+      this.cancelledDispersal=true;this.releasedDispersal = null;
       this.finishPress(event, false);
     }
 
@@ -841,13 +903,14 @@
 
     finishPress(event = {}, releaseCapture = false) {
       if (!this.pressed) return;
+      if (releaseCapture || event.type === "keyup") this.releasedDispersal = window.DuckDispersal?.capture(this, {...this.pressRecord,modality:event.type === "keyup"?"keyboard":"pointer"});
       this.pressed = false;
       this.releaseActivePressFibers();
       this.host.classList.remove("fur-pressed");
       const pointerId = event.pointerId ?? this.activePointerId;
       if (releaseCapture && pointerId !== null && pointerId !== undefined && this.host.hasPointerCapture?.(pointerId)) this.host.releasePointerCapture(pointerId);
       this.activePointerId = null;
-      if (this.reducedMotion.matches) {
+      if (this.reducedMotion.matches || this.options.reducedMotion) {
         this.setReducedPress(false);
       }
       this.wake();
@@ -861,20 +924,22 @@
 
     onKeyDown(event) {
       if (event.repeat || (event.key !== "Enter" && event.key !== " ") || this.host.disabled) return;
+      this.pressStartedAt=performance.now();this.pressRecord=window.DuckTransitions?.getContact?.(this.host);
+      this.cancelledDispersal=false;this.releasedDispersal = null;
       this.pointer.x = this.width / 2;
       this.pointer.y = this.height / 2;
       this.pressed = true;
       this.activePointerId = null;
       this.releaseActivePressFibers();
       this.host.classList.add("fur-pressed");
-      if (this.reducedMotion.matches) this.setReducedPress(true);
+      if (this.reducedMotion.matches || this.options.reducedMotion) this.setReducedPress(true);
       else if (this.gl) this.imprintPress();
       this.wake();
     }
 
     onKeyUp(event) {
       if (event.key !== "Enter" && event.key !== " ") return;
-      this.finishPress({}, false);
+      this.finishPress({...event,type:"keyup"}, false);
     }
 
     setReducedPress(pressed) {
@@ -898,6 +963,7 @@
     }
 
     imprintPress(strength = 0.82) {
+      if(this.pileField)this.pileField.press(this.pointer.x,this.pointer.y,this.interactionRadius(true),Math.max(0,this.options.recoveryDelay)/1000,Number(this.options.pileNeighbors)||0);
       const recoveryDelay = Math.max(0, Number(this.options.recoveryDelay) || 0) / 1000;
       const radius = this.interactionRadius(true);
       this.releaseActivePressFibers();
@@ -935,15 +1001,105 @@
         this.recoveryHold[index] = recoveryDelay;
       }
       this.draw();
+      this.pressResponseMs=Math.max(0,performance.now()-(this.pressStartedAt??performance.now()));
+    }
+
+    onActivate(event) {
+      if (this.host.disabled || this.host.dataset.transition === "none" || this.options.waveEnabled === false) return;
+      const record=window.DuckTransitions?.getActivation(this.host);
+      const rect=this.host.getBoundingClientRect();
+      const point = record ? {x:record.contact.x-rect.left,y:record.contact.y-rect.top} : event.detail ? this.localPointer(event) : { x: this.width / 2, y: this.height / 2 };
+      if(record?.impulse){
+        // Workspace handlers consume this physical event later in the same native click.
+        queueMicrotask(()=>{if(!record.consumed)this.emitWave(point,{activationId:record.id});});return;
+      }
+      this.emitWave(point,record?{timeline:record.timeline,activationId:record.id}:{});
+    }
+
+    emitWave(point = { x: this.width / 2, y: this.height / 2 }, shared = {}) {
+      if (this.destroyed || this.reducedMotion?.matches || this.options.reducedMotion || !this.gl) return;
+      const reach = Math.max(...[[0, 0], [this.width, 0], [0, this.height], [this.width, this.height]].map(([x,y]) => Math.hypot(x-point.x,y-point.y)));
+      this.waves ||= [];
+      if(shared.activationId && this.waves.some(w=>w.activationId===shared.activationId))return;
+      let rootField=null;
+      if(shared.impulse && shared.impulse.responseVersion!==2){
+        rootField=new Float64Array(this.count*13);
+        for(let i=0;i<this.count;i++){
+          const dx=this.roots[i*2]*this.width-point.x,dy=this.roots[i*2+1]*this.height-point.y,r=Math.hypot(dx,dy),sample=window.DuckDispersal.angular(shared.impulse,Math.atan2(dy,dx));
+          const outside=Math.max(0,r-sample.radius),edge=this.materialMask?.[i*3+1]||0,label=this.materialMask?.[i*3]||0;
+          const variation=this.rootSeeds[i*ROOT_STRIDE]*(1-edge*.78)+edge*.78;
+          const length=this.options.length*variation*(1+label*((this.options.labelLengthScale??1)-1))*(1+edge*.4);
+          rootField.set([r,dx/Math.max(.001,r),dy/Math.max(.001,r),sample.radial,sample.tangential,sample.velocity,sample.tangentialVelocity,sample.compression,sample.depression,outside/Math.max(60,shared.impulse.material.waveSpeed||540),Math.exp(-outside/Math.max(1,shared.impulse.pressRadius*8)),length,sample.radius],i*13);
+        }
+      }
+      this.waves.push({ rootField,x: point.x, y: point.y, radius: shared.impulse?shared.impulse.samples.reduce((n,s)=>n+s.radius,0)/shared.impulse.samples.length:0, reach, ...shared });
+      this.waves = this.waves.slice(-3);
+      this.wake();
+    }
+
+    advanceWaves(step) {
+      if(this.dispersalOwned)this.dispersalOwned.fill(0);
+      const width = Math.max(4, Number(this.options.waveWidth) || 22);
+      const speed = Math.max(60, Number(this.options.waveSpeed) || 540);
+      this.waves = (this.waves || []).filter((wave) => wave.impulse ? (wave.timeline?.progressAt?.(performance.now())??0)<1 : wave.radius < wave.reach + width);
+      for (const wave of this.waves) {
+        const previous = wave.radius;
+        wave.radius = wave.timeline?.radiusAt ? Math.max(previous,wave.timeline.radiusAt(performance.now())) : previous+speed*step;
+        // The new contract uses this live spring as the reference. Do not replace
+        // its per-root targets/velocity/remaining holds with a second solver.
+        if(wave.impulse?.responseVersion===2)continue;
+        const seconds=wave.impulse?(wave.timeline?.impulseSecondsAt?.(performance.now())??Math.max(0,(performance.now()-wave.impulse.capturedAt)/1000)):0;
+        const fade=wave.timeline?.deformationAt?.(performance.now())??1;
+        for (let index = 0; index < this.count; index += 1) {
+          if (this.pressed && this.activePress[index]) continue;
+          const dx = this.roots[index*2] * this.width - wave.x;
+          const dy = this.roots[index*2+1] * this.height - wave.y;
+          const distance = Math.hypot(dx,dy);
+          if(wave.impulse){
+            const data=wave.rootField,k=index*13;
+            if(distance>wave.radius || distance<data[k+12])continue;
+            const age=Math.max(0,seconds-data[k+9]),hold=Math.max(0,Number(wave.impulse.material.recoveryDelay)||0)/1000,attenuation=data[k+10]*fade,decay=Math.exp(-3*Math.max(0,age-hold))*attenuation;
+            const radial=window.DuckDispersal.evolve(data[k+3],data[k+5],age,hold)*attenuation;
+            const tangent=window.DuckDispersal.evolve(data[k+4],data[k+6],age,hold)*attenuation;
+            const c=data[k+7]*decay,scale=Math.max(.001,data[k+11]*1.62*(.68+.77*c)),nx=data[k+1],ny=data[k+2],offset=index*STATE_STRIDE;
+            this.state[offset]=(nx*radial-ny*tangent)/scale;
+            this.state[offset+1]=(ny*radial+nx*tangent)/scale;
+            this.state[offset+2]=c;this.state[offset+3]=data[k+8]*decay;
+            // Hand back the current held/recovered state, not stale press targets
+            // or pre-handoff velocity when this temporary owner finishes.
+            for(let component=0;component<STATE_STRIDE;component++){
+              if(this.pressTargets)this.pressTargets[offset+component]=this.state[offset+component];
+              if(this.velocity)this.velocity[offset+component]=0;
+            }
+            if(this.recoveryHold)this.recoveryHold[index]=Math.max(0,hold-age);
+            this.dispersalOwned ||= new Uint8Array(this.count);this.dispersalOwned[index]=1;
+            continue;
+          }
+          // Swept wavefront sampling prevents gaps at low frame rates.
+          const nearest = clamp(distance, previous, wave.radius);
+          const envelope = 1 - smoothstep(0, width, Math.abs(distance-nearest));
+          const amplitude = envelope * Math.exp(-distance / Math.max(1,wave.reach) * 0.6);
+          if (amplitude <= 0) continue;
+          const offset = index*STATE_STRIDE;
+          const bend = amplitude * (Number(this.options.waveBend) || 0);
+          this.state[offset] += (dx / Math.max(1,distance) * bend - this.state[offset]) * Math.min(1,step*35);
+          this.state[offset+1] += (dy / Math.max(1,distance) * bend - this.state[offset+1]) * Math.min(1,step*35);
+          this.state[offset+2] = Math.max(this.state[offset+2],amplitude * (Number(this.options.waveCompression) || 0));
+        }
+      }
     }
 
     simulate(step) {
+      if(this.options.inspectionFreeze)return;
+      this.advanceWaves(step);
       const stiffness = this.options.stiffness;
       const damping = this.options.damping;
       let maximumEnergy = 0;
+      if(this.pileField){if(this.pressed)this.pileField.press(this.pointer.x,this.pointer.y,this.interactionRadius(true),Math.max(0,this.options.recoveryDelay)/1000,Number(this.options.pileNeighbors)||0);maximumEnergy=this.pileField.advance(step);}
       let recoveringFibers = 0;
       for (let index = 0; index < this.count; index += 1) {
         const state = index * STATE_STRIDE;
+        if(this.dispersalOwned?.[index]){maximumEnergy=Math.max(maximumEnergy,.01);continue;}
         const activelyPressed = this.pressed && this.activePress[index] === 1;
         let fiberIsMoving = activelyPressed || this.recoveryHold[index] > 0;
         if (activelyPressed) {
@@ -1005,6 +1161,7 @@
     }
 
     frame(time) {
+      this.frameId = 0;
       if (this.destroyed || !this.running) return;
       if (!this.visible || document.hidden) {
         this.running = false;
@@ -1024,7 +1181,7 @@
         this.frames = 0;
         this.fpsClock = time;
       }
-      if (this.pressed || this.recoveringFibers > 0 || energy > REST_TOLERANCE.target) requestAnimationFrame(this.frame);
+      if (this.pressed || this.waves?.length || this.recoveringFibers > 0 || energy > REST_TOLERANCE.target) this.frameId = requestAnimationFrame(this.frame);
       else {
         this.running = false;
         this.lastFrame = 0;
@@ -1046,6 +1203,10 @@
       gl.uniform1f(this.labelWidthScaleLocation, clamp(Number(this.options.labelWidthScale) || 0.9, 0.2, 1));
       gl.uniform1f(this.boundaryLabelWidthScaleLocation, clamp(Number(this.options.boundaryLabelWidthScale) || 0.72, 0.35, 1));
       gl.uniform1f(this.boundaryLabelLeanScaleLocation, clamp(Number(this.options.boundaryLabelLeanScale) || 0.62, 0.2, 1));
+      gl.uniform1f(this.curveLocation,this.options.experimentalStrands && this.options.strandCurvature!==false?1:0);
+      gl.uniform1f(this.hasPileLocation,this.pileTexture && this.pileField?1:0);gl.uniform1i(this.pileFieldLocation,1);
+      gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,this.pileTexture||this.glyphTexture);
+      if(this.pileTexture && this.pileField)gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,32,16,gl.RGBA,gl.FLOAT,this.pileField.data);
       gl.uniform1i(this.glyphFieldLocation, 0);
       gl.uniform1f(this.hasGlyphLocation, this.hasGlyphTexture ? 1 : 0);
       gl.uniform1f(this.fragmentGlyphMaskLocation, this.options.fragmentGlyphMask === false ? 0 : 1);
@@ -1061,20 +1222,21 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, this.stateBuffer);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.state);
       gl.bindVertexArray(this.vertexArray);
-      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.count);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.strandVertices||6, this.count);
       gl.bindVertexArray(null);
     }
 
     wake() {
-      if (this.destroyed || this.running || !this.gl || !this.visible || document.hidden) return;
+      if (this.destroyed || this.transitionRetains || this.running || !this.gl || !this.visible || document.hidden) return;
       this.running = true;
       this.lastFrame = 0;
       this.frames = 0;
       this.fpsClock = performance.now();
-      requestAnimationFrame(this.frame);
+      this.frameId = requestAnimationFrame(this.frame);
     }
 
     setParameters(parameters) {
+      if(this.transitionRetains){this.pendingParameters={...this.pendingParameters,...parameters};return;}
       const previousDensity = this.options.density;
       const previousQuality = this.options.quality;
       const previousSilhouette = this.options.silhouette;
@@ -1087,6 +1249,7 @@
       const previousSilhouetteOverscan = this.options.silhouetteOverscan;
       const previousSilhouetteFringe = this.options.silhouetteFringe;
       this.options = { ...this.options, ...parameters };
+      if(this.options.reducedMotion) this.resetFibers();
       this.host.classList.toggle("fur-button-silhouette", Boolean(this.options.silhouette));
       if (
         previousDensity !== this.options.density
@@ -1112,6 +1275,7 @@
       return {
         renderer: this.gl ? "WebGL2 instanced strands" : "static fallback",
         fibers: this.count,
+        strandVertices:this.strandVertices||6,pileBytes:this.pileField?this.pileField.data.byteLength*3+this.pileField.hold.byteLength:0,
         labelFibers: this.labelFiberCount || 0,
         requestedGlyphFibers: this.requestedGlyphFibers || 0,
         allocatedGlyphFibers: this.allocatedGlyphFibers || 0,
@@ -1125,7 +1289,7 @@
         fps: this.running ? this.fps : 0,
         drawCalls: this.gl ? 1 : 0,
         rebuildMs: this.lastRebuildMs,
-        gpuBytes: (this.rootSeeds?.byteLength || 0) + (this.state?.byteLength || 0) + (this.materialMask?.byteLength || 0) + this.glyphTextureBytes,
+        gpuBytes: (this.rootSeeds?.byteLength || 0) + (this.state?.byteLength || 0) + (this.materialMask?.byteLength || 0) + this.glyphTextureBytes + (this.pileTexture?8192:0),
         glyphTextureBytes: this.glyphTextureBytes,
         cachedGlyphFields: this.labelFieldCache?.size || 0,
         settled: diagnostic.recoveringFibers === 0,
@@ -1195,6 +1359,10 @@
     }
 
     resetFibers() {
+      this.pileField?.clear();
+      if(this.frameId) cancelAnimationFrame(this.frameId);
+      this.frameId = 0;
+      this.waves = [];
       this.pressed = false;
       this.activePointerId = null;
       this.host.classList.remove("fur-pressed", "fur-hovered");
@@ -1212,6 +1380,9 @@
 
     onVisibility() {
       if (document.hidden) {
+        if(this.frameId) cancelAnimationFrame(this.frameId);
+        this.frameId = 0;
+        this.waves = [];
         this.finishPress({}, false);
         this.running = false;
         this.lastFrame = 0;
@@ -1233,7 +1404,7 @@
     onContextLost(event) {
       event.preventDefault();
       this.running = false;
-      this.glyphTexture = null;
+      this.glyphTexture = null;this.pileTexture=null;
       this.gl = null;
       this.host.classList.add("fur-static-fallback");
       this.fallbackReason = "WebGL context lost";
@@ -1245,9 +1416,21 @@
       this.resize();
     }
 
+    retainDispersal() {
+      this.transitionRetains=(this.transitionRetains||0)+1;
+      this.resizeObserver?.disconnect();this.intersectionObserver?.disconnect();this.labelObserver?.disconnect();
+      if(this.frameId)cancelAnimationFrame(this.frameId);this.frameId=0;this.running=false;
+      let released=false;
+      return ()=>{if(released)return;released=true;this.transitionRetains--;if(!this.transitionRetains){if(this.pendingDestroy)this.destroy();else{this.resizeObserver?.observe(this.host);this.intersectionObserver?.observe(this.host);this.labelObserver?.observe(this.host,{childList:true,characterData:true,subtree:true});if(this.pendingParameters){const pending=this.pendingParameters;this.pendingParameters=null;this.setParameters(pending);}this.wake();}}};
+    }
+
     destroy() {
+      if(this.transitionRetains){this.pendingDestroy=true;if(this.frameId)cancelAnimationFrame(this.frameId);this.frameId=0;this.running=false;return;}
       if (this.destroyed) return;
+      if(this.frameId) cancelAnimationFrame(this.frameId);
+      this.frameId = 0;
       this.destroyed = true;
+      liveSurfaces.delete(this);
       this.running = false;
       this.resizeObserver?.disconnect();
       this.intersectionObserver?.disconnect();
@@ -1261,6 +1444,7 @@
       this.host.removeEventListener("pointerleave", this.onPointerLeave);
       this.host.removeEventListener("keydown", this.onKeyDown);
       this.host.removeEventListener("keyup", this.onKeyUp);
+      this.host.removeEventListener("click", this.onActivate);
       document.removeEventListener("visibilitychange", this.onVisibility);
       window.removeEventListener("blur", this.onWindowBlur);
       this.canvas.removeEventListener("webglcontextlost", this.onContextLost);
@@ -1269,6 +1453,7 @@
 
       const gl = this.gl;
       if (gl) {
+        if (this.pileTexture) gl.deleteTexture(this.pileTexture);
         if (this.glyphTexture) gl.deleteTexture(this.glyphTexture);
         if (this.cornerBuffer) gl.deleteBuffer(this.cornerBuffer);
         if (this.rootBuffer) gl.deleteBuffer(this.rootBuffer);
@@ -1293,6 +1478,7 @@
     }
     const surface = new DuckFurSurface(host, options);
     registry.set(host, surface);
+    liveSurfaces.add(surface);
     return surface;
   }
 
@@ -1308,10 +1494,25 @@
     return true;
   }
 
+  // Dynamic task/calendar rendering may remove controls before a view refresh.
+  // Release their contexts explicitly instead of retaining detached surfaces.
+  if(typeof MutationObserver !== "undefined" && typeof document !== "undefined") {
+    new MutationObserver(records=> {
+      if(!records.some(record=>record.removedNodes.length))return;
+      for(const surface of [...liveSurfaces])if(!surface.host.isConnected)unmount(surface.host);
+    }).observe(document.documentElement,{childList:true,subtree:true});
+  }
+
+  DuckFurSurface.pressProfileForHandoff = pressProfile;
   window.DuckFur = {
     mount,
     mountAll,
     unmount,
+    get: (host) => registry.get(host),
+    getRendererStats: () => ({ contexts: [...liveSurfaces].filter(surface=>Boolean(surface.gl)).length, gpuBytes: [...liveSurfaces].reduce((sum,surface)=>sum+surface.getStats().gpuBytes,0) }),
+    // Reuse the approved resting pile on temporary deforming surfaces.
+    materialShaders: Object.freeze({vertex:VERTEX_SHADER,fragment:FRAGMENT_SHADER,curve:CURVE_GLSL,
+      fibersPerPixel:QUALITY.medium.fibersPerPixel*3.15}),
     defaults: { ...DEFAULTS },
     __testing: { DuckFurSurface, pressProfile, encodeSignedDistance, stableRandom, motionGuardProtection, overscanLayout, silhouetteRootIncluded, REST_TOLERANCE, ROOT_STRIDE, STATE_STRIDE, MATERIAL_STRIDE },
   };

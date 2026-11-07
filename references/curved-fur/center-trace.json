@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "center",
+  "recoveryDelay": 280,
+  "simulationHz": 120,
+  "events": [
+    {
+      "t": 0,
+      "type": "press",
+      "x": 0.5,
+      "y": 0.5
+    },
+    {
+      "t": 180,
+      "type": "release",
+      "x": 0.5,
+      "y": 0.5
+    }
+  ],
+  "duration": 3960
+}
