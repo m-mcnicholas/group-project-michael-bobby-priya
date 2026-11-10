@@ -75,12 +75,34 @@ test("first sync inserts classes and items without duplicates", () => {
   const plan = Ical.planAxisSync({ feed, newId: counterIds() });
   assert.equal(plan.classInserts.length, 4);
   assert.equal(plan.itemInserts.length, 5);
-  assert.deepEqual(plan.counts, { added: 5, updated: 0, removed: 0 });
+  assert.deepEqual(plan.counts, { added: 5, updated: 0, removed: 0, autoCompleted: 0 });
   const quiz = plan.itemInserts.find((row) => row.axis_uid === "6f1c2a9e-0d4b-4c7e-9a51-1b2c3d4e5f60");
   assert.equal(quiz.class_id, plan.classInserts.find((row) => row.axis_key === "Physics I (AP) - 4").id);
   assert.equal(quiz.source, "axis");
   assert.equal(quiz.due_time, null);
-  assert.ok(!("completed" in quiz) && !("scheduled_start" in quiz) && !("priority" in quiz));
+  assert.deepEqual([quiz.completed, quiz.completed_at], [false, null], "without a 'today', nothing is auto-completed");
+  assert.ok(!("scheduled_start" in quiz) && !("priority" in quiz));
+});
+
+test("first import completes items due before today; re-syncs and items due today stay open", () => {
+  const feed = Ical.parseAxisFeed(fixture);
+  const completedAt = "2026-11-06T18:00:00.000Z";
+  const first = Ical.planAxisSync({ feed, newId: counterIds(), today: "2026-11-06", completedAt });
+  const done = first.itemInserts.filter((row) => row.completed);
+  assert.deepEqual(done.map((row) => row.due_date), ["2026-11-03", "2026-11-05"]);
+  assert.ok(done.every((row) => row.completed_at === completedAt));
+  assert.equal(first.itemInserts.find((row) => row.due_date === "2026-11-06").completed, false, "due today is not overdue");
+  assert.equal(first.counts.autoCompleted, 2);
+
+  // Any existing Axis row (even a deleted one) means this isn't the first import.
+  const deleted = [{ id: "old", axis_uid: "something-else", completed: false, deleted_at: "2026-10-01T00:00:00Z" }];
+  const later = Ical.planAxisSync({ feed, existingItems: deleted, newId: counterIds(), today: "2026-11-30", completedAt });
+  assert.equal(later.counts.autoCompleted, 0);
+  assert.ok(later.itemInserts.every((row) => !row.completed && row.completed_at === null));
+
+  // Manual tasks alone don't count as a previous Axis import.
+  const manualOnly = Ical.planAxisSync({ feed, existingItems: [{ id: "m", axis_uid: null }], newId: counterIds(), today: "2026-11-06", completedAt });
+  assert.equal(manualOnly.counts.autoCompleted, 2);
 });
 
 test("re-sync updates only Axis-owned fields, skips completed and deleted items, and flags missing ones", () => {

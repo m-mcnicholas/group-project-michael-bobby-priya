@@ -1079,7 +1079,8 @@ els.axisSettings.addEventListener("submit", (event) => {
   runAction(event.submitter, async () => {
     showToast("Connecting to Axis…");
     const result = await store.connectAxis(link);
-    showToast(`Axis connected: ${result.added} assignments and ${result.classesAdded} classes imported.`);
+    const pastNote = result.autoCompleted ? ` ${result.autoCompleted} already past due were marked complete.` : "";
+    showToast(`Axis connected: ${result.added} assignments and ${result.classesAdded} classes imported.${pastNote}`);
     await refreshAccountState();
   });
 });

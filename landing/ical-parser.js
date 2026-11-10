@@ -126,7 +126,13 @@
   }
 
   // Works out the database writes for one sync. Rows use the database's snake_case column names.
-  function planAxisSync({ feed, existingClasses = [], existingItems = [], newId }) {
+  // On the first import (no Axis items exist yet, not even deleted ones), anything due before
+  // `today` (the student's local 'YYYY-MM-DD') arrives already completed at `completedAt`, so
+  // connecting mid-year doesn't bury the planner under months of old assignments. Later syncs never
+  // auto-complete: a newly posted past-due item may be something the student still has to turn in.
+  function planAxisSync({ feed, existingClasses = [], existingItems = [], newId, today = null, completedAt = null }) {
+    const firstImport = !existingItems.some((row) => row.axis_uid);
+    const completeBefore = firstImport && today && completedAt ? today : null;
     const classIdByKey = new Map(existingClasses.filter((row) => row.axis_key).map((row) => [row.axis_key, row.id]));
     const classInserts = [];
     feed.classes.forEach((feedClass) => {
@@ -145,7 +151,9 @@
       const owned = { title: item.title, due_date: item.dueDate, class_id: item.classKey ? classIdByKey.get(item.classKey) : null, notes: item.notes };
       const existing = existingByUid.get(item.axisUid);
       if (!existing) {
-        itemInserts.push({ id: newId(), ...owned, type: item.type, due_time: item.dueTime, source: "axis", axis_uid: item.axisUid, axis_missing: false });
+        const past = Boolean(completeBefore && item.dueDate && item.dueDate < completeBefore);
+        itemInserts.push({ id: newId(), ...owned, type: item.type, due_time: item.dueTime, source: "axis", axis_uid: item.axisUid, axis_missing: false,
+          completed: past, completed_at: past ? completedAt : null });
         return;
       }
       if (existing.deleted_at || existing.completed) return;
@@ -156,7 +164,8 @@
       .filter((row) => row.axis_uid && !seen.has(row.axis_uid) && !row.completed && !row.deleted_at && !row.axis_missing)
       .map((row) => row.id);
 
-    return { classInserts, itemInserts, itemUpdates, itemsMissing, counts: { added: itemInserts.length, updated: itemUpdates.length, removed: itemsMissing.length } };
+    const autoCompleted = itemInserts.filter((row) => row.completed).length;
+    return { classInserts, itemInserts, itemUpdates, itemsMissing, counts: { added: itemInserts.length, updated: itemUpdates.length, removed: itemsMissing.length, autoCompleted } };
   }
 
   return {

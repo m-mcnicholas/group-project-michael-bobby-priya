@@ -45,7 +45,19 @@ FROM (
 ) AS j
 WHERE items.id = j.id AND items.user_id = ?2 AND items.completed = 0 AND items.deleted_at IS NULL`;
 
-export async function syncUser(env, userId, icalUrl, { fetchImpl } = {}) {
+export function validTimeZone(value) {
+  if (typeof value !== "string" || !value || value.length > 100) return false;
+  try { new Intl.DateTimeFormat("en-US", { timeZone: value }).format(); return true; } catch { return false; }
+}
+
+// The calendar date ('YYYY-MM-DD') it currently is for the student, since due dates are local wall-clock dates.
+export function localDateKey(date, timeZone) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" })
+    .formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+export async function syncUser(env, userId, icalUrl, { fetchImpl, now = () => new Date() } = {}) {
   const db = env.DB;
   const runId = crypto.randomUUID();
   const startedAt = nowIso();
@@ -55,25 +67,31 @@ export async function syncUser(env, userId, icalUrl, { fetchImpl } = {}) {
   ]);
   try {
     const feed = Ical.parseAxisFeed(await fetchFeed(icalUrl, fetchImpl));
-    const [axisClasses, axisItems, classCount] = await db.batch([
+    const [axisClasses, axisItems, classCount, profile] = await db.batch([
       db.prepare("SELECT id, axis_key FROM classes WHERE user_id = ? AND axis_key IS NOT NULL").bind(userId),
       db.prepare("SELECT id, axis_uid, title, due_date, class_id, notes, completed, deleted_at, axis_missing FROM items WHERE user_id = ? AND axis_uid IS NOT NULL").bind(userId),
       db.prepare("SELECT count(*) AS n FROM classes WHERE user_id = ?").bind(userId),
+      db.prepare("SELECT time_zone FROM users WHERE id = ?").bind(userId),
     ]);
     const existingClasses = axisClasses.results;
+    const timeZone = validTimeZone(profile.results[0]?.time_zone) ? profile.results[0].time_zone : "America/Los_Angeles";
+    const clock = now();
     const plan = Ical.planAxisSync({
       feed,
       // Every existing class counts toward the color index, so new Axis classes don't repeat manual colors.
       existingClasses: [...existingClasses, ...Array(Math.max(0, classCount.results[0].n - existingClasses.length)).fill({})],
       existingItems: axisItems.results.map((row) => ({ ...row, completed: Boolean(row.completed), axis_missing: Boolean(row.axis_missing) })),
       newId: () => crypto.randomUUID(),
+      // First import only: assignments due before today arrive already completed.
+      today: localDateKey(clock, timeZone),
+      completedAt: clock.toISOString(),
     });
 
     const finishedAt = nowIso();
     const statements = [];
     if (plan.classInserts.length) statements.push(jsonInsert(db, "classes", userId, plan.classInserts, "ON CONFLICT (user_id, axis_key) DO NOTHING"));
     if (plan.itemInserts.length) {
-      const rows = plan.itemInserts.map((row) => ({ ...row, axis_missing: row.axis_missing ? 1 : 0 }));
+      const rows = plan.itemInserts.map((row) => ({ ...row, axis_missing: row.axis_missing ? 1 : 0, completed: row.completed ? 1 : 0 }));
       statements.push(jsonInsert(db, "items", userId, rows, "ON CONFLICT (user_id, axis_uid) DO NOTHING"));
     }
     if (plan.itemUpdates.length) statements.push(db.prepare(ITEM_UPDATES).bind(JSON.stringify(plan.itemUpdates), userId, finishedAt));
@@ -119,6 +137,10 @@ export async function handleAxis(request, env, path, user, options = {}) {
   if (body.mode === "connect") {
     let icalUrl;
     try { icalUrl = Ical.normalizeFeedUrl(body.icalUrl); } catch (error) { throw new HttpError(400, error.message); }
+    // The browser's zone decides what "before today" means for the first import (and later cron syncs).
+    if (validTimeZone(body.timeZone)) {
+      await db.prepare("UPDATE users SET time_zone = ?, updated_at = ? WHERE id = ?").bind(body.timeZone, nowIso(), user.id).run();
+    }
     Ical.parseAxisFeed(await fetchFeed(icalUrl, options.fetchImpl)); // prove the link works before saving it
     const now = nowIso();
     await db.prepare(`INSERT INTO axis_connections (user_id, ical_url, updated_at) VALUES (?1, ?2, ?3)

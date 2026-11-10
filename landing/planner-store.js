@@ -415,7 +415,12 @@
         const status = await api("GET", "/axis");
         return { connected: Boolean(status.connected), lastSyncedAt: status.lastSyncedAt || null, lastError: status.lastError || null };
       },
-      async connectAxis(icalUrl) { return this.invokeAxis({ mode: "connect", icalUrl }); },
+      async connectAxis(icalUrl) {
+        // The Worker uses the student's zone to decide which first-import assignments are already past due.
+        let timeZone;
+        try { timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { timeZone = undefined; }
+        return this.invokeAxis({ mode: "connect", icalUrl, timeZone });
+      },
       async syncAxisNow() { return this.invokeAxis({ mode: "sync" }); },
       async invokeAxis(body) {
         if (backend.mode !== "cloud") throw new Error("Sign in to connect Axis.");

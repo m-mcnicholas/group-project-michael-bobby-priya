@@ -16,10 +16,14 @@ const FEED_LINK = "webcal://example.myschoolapp.com/podium/feed/iCal.aspx?z=made
 const PASSWORD = "quack quack 123";
 const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
-function setup(overrides) {
+// Axis tests run on a fixed clock. By default it's before every fixture due date (Nov 3–12, 2026),
+// so nothing counts as past due unless a test moves the clock.
+function setup(overrides, { clock = "2026-11-01T20:00:00.000Z" } = {}) {
   const fake = createFakeEnv(overrides);
   const ctx = createCtx();
   let feedText = fixture;
+  let nowValue = new Date(clock);
+  const now = () => nowValue;
   const feedRequests = [];
   const fetchImpl = async (url, init) => { feedRequests.push({ url, init }); return new Response(feedText, { status: 200, headers: { "Content-Type": "text/calendar" } }); };
   async function call(pathname, { method = "GET", body, cookie, origin = ORIGIN, headers = {} } = {}) {
@@ -27,7 +31,7 @@ function setup(overrides) {
     if (cookie) init.headers.Cookie = cookie;
     if (origin && method !== "GET") init.headers.Origin = origin;
     if (body !== undefined) { init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(body); }
-    const response = await handleRequest(new Request(`${ORIGIN}${pathname}`, init), fake.env, ctx, { fetchImpl });
+    const response = await handleRequest(new Request(`${ORIGIN}${pathname}`, init), fake.env, ctx, { fetchImpl, now });
     await ctx.settle();
     const text = await response.text();
     let data = null;
@@ -41,7 +45,7 @@ function setup(overrides) {
     assert.ok(response.status === 200 || response.status === 201, JSON.stringify(response.data));
     return { cookie: response.headers.get("set-cookie").split(";")[0], user: response.data.user, recoveryCode: response.data.recoveryCode };
   }
-  return { ...fake, ctx, call, signIn, feedRequests, fetchImpl, setFeed: (text) => { feedText = text; } };
+  return { ...fake, ctx, call, signIn, feedRequests, fetchImpl, now, setFeed: (text) => { feedText = text; }, setClock: (iso) => { nowValue = new Date(iso); } };
 }
 
 test("password accounts: sign-up, sign-in, HttpOnly hashed sessions, and no email is ever sent", async () => {
@@ -264,6 +268,44 @@ test("Axis connect imports classes and items, re-syncs without duplicates, and n
   await app.call("/api/axis", { method: "DELETE", cookie });
   assert.equal((await app.call("/api/axis", { cookie })).data.connected, false);
   assert.equal((await app.call("/api/planner", { cookie })).data.items.length, 5, "disconnecting keeps imported items");
+});
+
+test("the first Axis import completes assignments already past due in the student's time zone; later syncs never do", async () => {
+  // 07:30 UTC on Nov 6 is still Nov 5 in Los Angeles but already Nov 6 in Tokyo.
+  const clock = "2026-11-06T07:30:00.000Z";
+  const titles = (items) => items.filter((row) => row.completed).map((row) => row.title).sort();
+
+  const la = setup(undefined, { clock });
+  const a = await la.signIn("la@a.test");
+  const connected = await la.call("/api/axis", { method: "POST", cookie: a.cookie, body: { mode: "connect", icalUrl: FEED_LINK, timeZone: "America/Los_Angeles" } });
+  assert.equal(connected.status, 200, JSON.stringify(connected.data));
+  assert.deepEqual([connected.data.added, connected.data.autoCompleted], [5, 1]);
+  let items = (await la.call("/api/planner", { cookie: a.cookie })).data.items;
+  assert.deepEqual(titles(items), ["Unit 1 Quiz"], "only Nov 3 is before Nov 5; an item due today stays open");
+  assert.equal(items.find((row) => row.title === "Unit 1 Quiz").completed_at, clock);
+
+  // A later sync that brings a brand-new, already past-due item leaves it open: the student may still owe it.
+  const lateItem = fixture.replace("END:VCALENDAR", "BEGIN:VEVENT\r\nUID:late-posted-1\r\nDTSTART;VALUE=DATE:20261104\r\nSUMMARY:Physics I (AP) - 4: Late Posted Worksheet\r\nEND:VEVENT\r\nEND:VCALENDAR");
+  la.setFeed(lateItem);
+  la.setClock("2026-11-09T20:00:00.000Z");
+  la.env.DB.raw.prepare("UPDATE axis_connections SET last_attempted_at = NULL").run();
+  const resync = await la.call("/api/axis", { method: "POST", cookie: a.cookie, body: { mode: "sync" } });
+  assert.deepEqual([resync.data.added, resync.data.autoCompleted], [1, 0]);
+  items = (await la.call("/api/planner", { cookie: a.cookie })).data.items;
+  assert.deepEqual(titles(items), ["Unit 1 Quiz"], "nothing else was completed, including Nov 5/6 items that are now past");
+
+  // The browser's zone is saved, so the same instant is a day later in Tokyo.
+  const tokyo = setup(undefined, { clock });
+  const b = await tokyo.signIn("tokyo@b.test");
+  const imported = await tokyo.call("/api/axis", { method: "POST", cookie: b.cookie, body: { mode: "connect", icalUrl: FEED_LINK, timeZone: "Asia/Tokyo" } });
+  assert.equal(imported.data.autoCompleted, 2);
+  assert.equal(tokyo.env.DB.raw.prepare("SELECT time_zone FROM users WHERE id = ?").get(b.user.id).time_zone, "Asia/Tokyo");
+
+  // A bogus zone is ignored and the account's saved zone (default Los Angeles) is used.
+  const bogus = setup(undefined, { clock });
+  const c = await bogus.signIn("bogus@c.test");
+  const fallback = await bogus.call("/api/axis", { method: "POST", cookie: c.cookie, body: { mode: "connect", icalUrl: FEED_LINK, timeZone: "Not/AZone" } });
+  assert.equal(fallback.data.autoCompleted, 1);
 });
 
 test("a failing feed records the error without leaking details", async () => {
