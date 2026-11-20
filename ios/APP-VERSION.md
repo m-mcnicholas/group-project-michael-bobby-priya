@@ -1,9 +1,11 @@
 # Current native app version
 
-Synced November 19 and verified November 20, 2026 from website commit `fb93ff7` (application source `c5b5aed`, cache v95). The existing local Xcode project includes the latest calendar folding, deadline styling, whole-timetable immediate spring rebound and request backoff changes.
+The website is on this repository’s `main` branch. The matching portable iPhone/iPad app is on [`codex/ios-main-release-20261120`](https://github.com/m-mcnicholas/group-project-michael-bobby-priya/tree/codex/ios-main-release-20261120).
 
-The app now connects to **https://duckplan-latest.ocs-learning.workers.dev/api**, as explicitly requested. This is the separate new site’s accounts/data. Original-server accounts and records are not migrated or deleted; use the account created on the new site. Device guest data is preserved, and account/API-scoped fallback templates remain isolated from the new server.
+The app release bundles website `fb93ff7` (application `c5b5aed`, cache v95), retaining six app-only web overlays and `native-cloud.js`. Its API is **https://duckplan-latest.ocs-learning.workers.dev/api**, using the new site’s separate accounts/data as explicitly selected. Existing original-server records and guest data were not deleted or migrated.
 
-Open the existing `DuckPlan-iOS/ios/DuckPlan.xcodeproj`, choose your connected iPhone/iPad and press Run to install. Existing local signing settings, native alarms/normal notifications, approved icon and sounds are preserved. Source synchronization or a build does not update an installed physical app.
+For a GitHub checkout, use the app branch, open `ios/DuckPlan.xcodeproj`, select your development team and connected device, then Run. Portable signing selections are blank. On this Mac, the existing `DuckPlan-iOS/ios/DuckPlan.xcodeproj` retains its original signing settings and verified native files; keep using that project.
 
-See `docs/native-latest-20261119/README.md` for exact source/build/runtime evidence and limitations. Free Personal Team background push remains disabled; this update does not add closed-app cross-device APNs sync.
+Verification: both original unsigned builds, all119 web-file bundle checks,580 Node tests and32 actual iPhone/iPad WKWebView mode runs passed. The portable project is also compiled after clearing personal signing fields. Details: `docs/main-release-20261120/README.md` and `docs/native-latest-20261119/README.md`.
+
+A GitHub push/build does not install the physical phone. Free Personal Team closed-app APNs sync remains unavailable; native alarm/notification physical delivery is a separate check.

@@ -48,3 +48,7 @@ Keep the website and existing iPhone/iPad app aligned with the same approved tas
 ## Current native release checkpoint
 
 November 20, 2026: the existing Xcode app bundles website `fb93ff7` / cache v95 and uses `https://duckplan-latest.ocs-learning.workers.dev/api` by explicit user choice. This new site has separate accounts/data; preserve original-server records, local guest data and API/account-scoped fallback templates. Native alarms, notifications, approved icon and signing settings remain preserved. Before future app updates, check current build/runtime evidence and installation limits in `docs/native-latest-20261119/README.md`; use `ios/APP-VERSION.md` to identify the current app source rather than the older November15 branch.
+
+## Shared GitHub release pointer
+
+The November20,2026 upload keeps the website on `main` and the portable app on `codex/ios-main-release-20261120`, with separate web/native bundle configuration. Check `ios/APP-VERSION.md` and `docs/main-release-20261120/README.md` before a GitHub app checkout. Preserve the existing local Xcode team selections; portable copies intentionally clear them.

@@ -1,0 +1,15 @@
+{
+  "verifiedNativeCommit": "8951ee601dd2f699e14865c68afe7b3b6eae0fd9",
+  "status": "PASS",
+  "sameSourceDirectories": [
+    "landing",
+    "ios/App",
+    "ios/Shared",
+    "ios/Widgets",
+    "ios/Resources",
+    "ios/Config"
+  ],
+  "onlyProjectChange": "Cleared personal DEVELOPMENT_TEAM selections in the portable release copy",
+  "existingLocalProjectUnchanged": true,
+  "api": "https://duckplan-latest.ocs-learning.workers.dev/api"
+}

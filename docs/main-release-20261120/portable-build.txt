@@ -1,0 +1,4 @@
+Portable Debug simulator app/widget build: PASS
+CODE_SIGNING_ALLOWED=NO
+Full local log: /private/tmp/duckplan-portable-app-release-20261120.log
+** BUILD SUCCEEDED **
